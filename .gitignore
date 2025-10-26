@@ -124,3 +124,281 @@ temp/
 # Package lock files
 package-lock.json
 yarn.lock
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Python virtual environment
+venv/
+env/
+ENV/
+.venv/
+.env/
+.ENV/
+
+# IPython
+profile_default/
+ipython_config.py
+
+# pyenv
+.python-version
+
+# pip
+pip-log.txt
+pip-delete-this-directory.txt
+
+# conda
+conda-meta/
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# SageMath parsed files
+*.sage.py
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Spyder project settings
+.spyderproject
+.spyproject
+
+# Rope project settings
+.ropeproject
+
+# mkdocs documentation
+/site
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre type checker
+.pyre/
+
+# Python test coverage
+htmlcov/
+.coverage
+.coverage.*
+*,cover
+.cache
+
+# PyCharm
+.idea/
+
+# VS Code
+.vscode/
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim
+*.swp
+*.swo
+
+# Nuxt.js
+.nuxt/
+.nuxt-devtools/
+.nuxt-storybook/
+
+# Next.js
+.next/
+out/
+
+# NPM
+npm-debug.log*
+.npm/
+
+# Yarn
+yarn-debug.log*
+yarn-error.log*
+.yarn-integrity
+
+# PNPM
+pnpm-debug.log*
+
+# Docker
+docker-compose.override.yml
+
+# Environment files
+.env*.local
+
+# SQLite
+*.sqlite3
+*.db3
+
+# PostgreSQL
+*.pgsql
+
+# MySQL
+*.sql
+
+# MongoDB
+*.mongo
+
+# Redis
+*.rdb
+*.aof
+
+# Elasticsearch
+*.elasticsearch
+
+# Log files
+*.log*
+
+# Temp files
+*.tmp
+*.temp
+
+# Backup files
+*.bak
+*.backup
+
+# Swap files
+*.swp
+*.swo
+
+# Core dumps
+core
+core.*
+
+# Heap dumps
+*.hprof
+
+# Memory dumps
+*.dmp
+
+# Crash reports
+*.crash
+
+# System files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Frontend build artifacts
+dist/
+build/
+out/
+
+# Webpack
+*.chunk.js
+*.bundle.js
+
+# Rollup
+*.es.js
+*.umd.js
+
+# Parcel
+.cache/
+
+# Vite
+.vite/
+vite.config.*.timestamp-*
+vite.config.*.timestamp-*.*
+
+# ESLint
+.eslintcache
+
+# Stylelint
+.stylelintcache
+
+# Prettier
+.prettiercache
+
+# Browserlist
+.browserslistrc
+
+# EditorConfig
+.editorconfig
+
+# Font files
+*.woff
+*.woff2
+*.eot
+*.ttf
+*.otf
+
+# Image files
+*.webp
+*.avif
+
+# Video files
+*.mp4
+*.webm
+*.ogg
+*.mov
+
+# Audio files
+*.mp3
+*.wav
+*.flac
+*.aac
+
+# 3D files
+*.glb
+*.gltf
+*.fbx
+*.obj
+
+# Archive files
+*.zip
+*.tar
+*.tar.gz
+*.rar
+*.7z
+
+# Executable files
+*.exe
+*.msi
+*.app
+*.dmg
+
+# Certificate files
+*.crt
+*.key
+*.pem
+*.p12
+*.pfx
+
+# Configuration files
+*.config.js
+*.config.json
+*.config.yml
+*.config.yaml
