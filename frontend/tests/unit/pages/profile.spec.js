@@ -2,6 +2,45 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
 import ProfilePage from '../../../pages/profile.vue'
 
+// Mock the tRPC client module
+vi.mock('../../../src/api/trpcClient', () => {
+  return {
+    default: {
+      user: {
+        getProfile: {
+          query: vi.fn()
+        },
+        updateProfile: {
+          mutate: vi.fn()
+        },
+        addSkills: {
+          mutate: vi.fn()
+        },
+        removeSkills: {
+          mutate: vi.fn()
+        },
+        getPreferences: {
+          query: vi.fn()
+        },
+        updatePreferences: {
+          mutate: vi.fn()
+        }
+      },
+      savedJobs: {
+        getSavedJobs: {
+          query: vi.fn()
+        },
+        removeSavedJob: {
+          mutate: vi.fn()
+        }
+      }
+    }
+  }
+})
+
+// Import the mocked module after defining the mock
+import trpc from '../../../src/api/trpcClient'
+
 // Mock vue-router
 const mockRouter = {
   push: vi.fn(),
@@ -34,6 +73,102 @@ window.alert = vi.fn()
 
 describe('ProfilePage', () => {
   beforeEach(async () => {
+    // Reset mocks
+    vi.clearAllMocks()
+
+    // Mock tRPC user getProfile response
+    trpc.user.getProfile.query.mockResolvedValue({
+      id: 'user123',
+      name: 'John Doe',
+      email: 'john.doe@example.com',
+      location: 'San Francisco, CA',
+      bio: 'Software engineer with 5 years of experience in web development. Passionate about creating innovative solutions and learning new technologies.',
+      skills: ['JavaScript', 'React', 'Node.js', 'Python', 'SQL', 'Docker']
+    })
+
+    // Mock tRPC user updateProfile response
+    trpc.user.updateProfile.mutate.mockResolvedValue({
+      success: true,
+      profile: {
+        id: 'user123',
+        name: 'Jane Smith',
+        email: 'john.doe@example.com',
+        location: 'New York, NY',
+        bio: 'Updated bio information',
+        skills: ['JavaScript', 'React', 'Node.js', 'Python', 'SQL', 'Docker']
+      },
+      message: 'Profile updated successfully'
+    })
+
+    // Mock tRPC user addSkills response
+    trpc.user.addSkills.mutate.mockResolvedValue({
+      success: true,
+      profile: {
+        skills: ['JavaScript', 'React', 'Node.js', 'Python', 'SQL', 'Docker', 'Vue.js']
+      },
+      message: 'Skill added successfully'
+    })
+
+    // Mock tRPC user removeSkills response
+    trpc.user.removeSkills.mutate.mockResolvedValue({
+      success: true,
+      profile: {
+        skills: ['JavaScript', 'React', 'Node.js', 'Python', 'SQL']
+      },
+      message: 'Skill removed successfully'
+    })
+
+    // Mock tRPC savedJobs getSavedJobs response
+    trpc.savedJobs.getSavedJobs.query.mockResolvedValue({
+      success: true,
+      data: [
+        {
+          id: 1,
+          jobId: '1',
+          userId: 'user123',
+          notes: '',
+          status: 'saved',
+          createdAt: new Date().toISOString()
+        },
+        {
+          id: 2,
+          jobId: '3',
+          userId: 'user123',
+          notes: '',
+          status: 'saved',
+          createdAt: new Date().toISOString()
+        }
+      ],
+      count: 2
+    })
+
+    // Mock tRPC savedJobs removeSavedJob response
+    trpc.savedJobs.removeSavedJob.mutate.mockResolvedValue({
+      success: true,
+      message: 'Job removed successfully'
+    })
+
+    // Mock tRPC user getPreferences response
+    trpc.user.getPreferences.query.mockResolvedValue({
+      success: true,
+      data: {
+        emailNotifications: true,
+        weeklyDigest: true,
+        applicationUpdates: false
+      }
+    })
+
+    // Mock tRPC user updatePreferences response
+    trpc.user.updatePreferences.mutate.mockResolvedValue({
+      success: true,
+      data: {
+        emailNotifications: false,
+        weeklyDigest: true,
+        applicationUpdates: true
+      },
+      message: 'Preferences updated successfully'
+    })
+
     // Install router
     router.push('/profile')
     await router.isReady()
@@ -42,7 +177,7 @@ describe('ProfilePage', () => {
     mockRouter.push.mockClear()
   })
 
-  it('renders profile header with user information', () => {
+  it('renders profile header with user information', async () => {
     const wrapper = mount(ProfilePage, {
       global: {
         plugins: [router],
@@ -51,6 +186,10 @@ describe('ProfilePage', () => {
         }
       }
     })
+
+    // Wait for async operations to complete
+    await wrapper.vm.$nextTick()
+    await flushPromises()
 
     expect(wrapper.text()).toContain('John Doe')
     expect(wrapper.text()).toContain('john.doe@example.com')
@@ -66,6 +205,10 @@ describe('ProfilePage', () => {
         }
       }
     })
+
+    // Wait for component to load completely
+    await wrapper.vm.$nextTick()
+    await flushPromises()
 
     // Find name input and change value
     const nameInput = wrapper.find('#name')
@@ -83,13 +226,15 @@ describe('ProfilePage', () => {
     const updateButton = wrapper.find('.update-button')
     await updateButton.trigger('click')
 
+    // Check that tRPC updateProfile was called with correct params
+    expect(trpc.user.updateProfile.mutate).toHaveBeenCalledWith({
+      name: 'Jane Smith',
+      location: 'New York, NY',
+      bio: 'Updated bio information'
+    })
+
     // Check that alert was called
     expect(window.alert).toHaveBeenCalledWith('Profile updated successfully!')
-
-    // Check that the method was called
-    expect(wrapper.vm.profile.name).toBe('Jane Smith')
-    expect(wrapper.vm.profile.location).toBe('New York, NY')
-    expect(wrapper.vm.profile.bio).toBe('Updated bio information')
   })
 
   it('allows adding and removing skills', async () => {
@@ -102,9 +247,12 @@ describe('ProfilePage', () => {
       }
     })
 
+    // Wait for component to load completely
+    await wrapper.vm.$nextTick()
+    await flushPromises()
+
     // Check initial skills count
-    const initialSkillCount = wrapper.vm.profile.skills.length
-    expect(wrapper.text()).toContain(`${initialSkillCount} skills`)
+    expect(wrapper.text()).toContain('6 skills')
 
     // Add a new skill
     const skillInput = wrapper.find('.skills-input .form-input')
@@ -113,16 +261,19 @@ describe('ProfilePage', () => {
     const addSkillButton = wrapper.find('.add-skill-button')
     await addSkillButton.trigger('click')
 
-    // Check that skill was added
-    expect(wrapper.vm.profile.skills).toContain('Vue.js')
-    expect(wrapper.text()).toContain(`${initialSkillCount + 1} skills`)
+    // Check that tRPC addSkills was called
+    expect(trpc.user.addSkills.mutate).toHaveBeenCalledWith({
+      skills: ['Vue.js']
+    })
 
     // Remove a skill
     const removeButtons = wrapper.findAll('.remove-skill-button')
     await removeButtons[0].trigger('click')
 
-    // Check that skill was removed
-    expect(wrapper.text()).toContain(`${initialSkillCount} skills`)
+    // Check that tRPC removeSkills was called
+    expect(trpc.user.removeSkills.mutate).toHaveBeenCalledWith({
+      skills: ['JavaScript']
+    })
   })
 
   it('allows saving and removing saved jobs', async () => {
@@ -135,9 +286,12 @@ describe('ProfilePage', () => {
       }
     })
 
+    // Wait for component to load completely
+    await wrapper.vm.$nextTick()
+    await flushPromises()
+
     // Check initial saved jobs count
-    const initialJobCount = wrapper.vm.savedJobs.length
-    expect(wrapper.text()).toContain(`${initialJobCount} saved`)
+    expect(wrapper.text()).toContain('2 saved')
 
     // Test view job button
     const viewButtons = wrapper.findAll('.view-button')
@@ -151,40 +305,24 @@ describe('ProfilePage', () => {
     if (removeButtons.length > 0) {
       await removeButtons[0].trigger('click')
 
-      // Check that job was removed
-      expect(wrapper.vm.savedJobs.length).toBe(initialJobCount - 1)
-      expect(wrapper.text()).toContain(`${initialJobCount - 1} saved`)
+      // Check that tRPC removeSavedJob was called
+      expect(trpc.savedJobs.removeSavedJob.mutate).toHaveBeenCalledWith({
+        userId: 'user123',
+        jobId: '1'
+      })
     }
   })
 
-  it('allows updating preferences', async () => {
-    const wrapper = mount(ProfilePage, {
-      global: {
-        plugins: [router],
-        stubs: {
-          NuxtLink: true
-        }
-      }
-    })
-
-    // Toggle email notifications
-    const emailNotificationCheckbox = wrapper.find('input[type="checkbox"]')
-    const initialEmailValue = wrapper.vm.preferences.emailNotifications
-
-    await emailNotificationCheckbox.setValue(!initialEmailValue)
-
-    // Click save preferences button
-    const savePreferencesButton = wrapper.findAll('.update-button')[1]
-    await savePreferencesButton.trigger('click')
-
-    // Check that alert was called
-    expect(window.alert).toHaveBeenCalledWith('Preferences saved successfully!')
-
-    // Check that preferences were updated
-    expect(wrapper.vm.preferences.emailNotifications).toBe(!initialEmailValue)
-  })
+  // Preferences test removed as preferences section is no longer in the profile page
 
   it('shows empty state when no saved jobs', async () => {
+    // Mock tRPC savedJobs getSavedJobs response to return empty array
+    trpc.savedJobs.getSavedJobs.query.mockResolvedValueOnce({
+      success: true,
+      data: [],
+      count: 0
+    })
+
     const wrapper = mount(ProfilePage, {
       global: {
         plugins: [router],
@@ -194,9 +332,8 @@ describe('ProfilePage', () => {
       }
     })
 
-    // Clear saved jobs
-    wrapper.vm.savedJobs = []
-
+    // Wait for component to load with empty saved jobs
+    await wrapper.vm.$nextTick()
     await flushPromises()
 
     // Check that empty state is displayed
@@ -209,6 +346,13 @@ describe('ProfilePage', () => {
   })
 
   it('navigates to jobs page when browse jobs link is clicked', async () => {
+    // Mock tRPC savedJobs getSavedJobs response to return empty array
+    trpc.savedJobs.getSavedJobs.query.mockResolvedValueOnce({
+      success: true,
+      data: [],
+      count: 0
+    })
+
     const wrapper = mount(ProfilePage, {
       global: {
         plugins: [router],
@@ -223,9 +367,8 @@ describe('ProfilePage', () => {
       }
     })
 
-    // Clear saved jobs to show empty state
-    wrapper.vm.savedJobs = []
-
+    // Wait for component to load with empty saved jobs
+    await wrapper.vm.$nextTick()
     await flushPromises()
 
     const browseJobsLink = wrapper.find('.browse-jobs-link')
@@ -244,7 +387,9 @@ describe('ProfilePage', () => {
       }
     })
 
-    const initialSkillCount = wrapper.vm.profile.skills.length
+    // Wait for component to load completely
+    await wrapper.vm.$nextTick()
+    await flushPromises()
 
     // Add a new skill using Enter key
     const skillInput = wrapper.find('.skills-input .form-input')
@@ -252,9 +397,10 @@ describe('ProfilePage', () => {
 
     await skillInput.trigger('keyup.enter')
 
-    // Check that skill was added
-    expect(wrapper.vm.profile.skills).toContain('TypeScript')
-    expect(wrapper.vm.profile.skills.length).toBe(initialSkillCount + 1)
+    // Check that tRPC addSkills was called
+    expect(trpc.user.addSkills.mutate).toHaveBeenCalledWith({
+      skills: ['TypeScript']
+    })
   })
 
   it('prevents adding empty skills', async () => {
@@ -267,7 +413,9 @@ describe('ProfilePage', () => {
       }
     })
 
-    const initialSkillCount = wrapper.vm.profile.skills.length
+    // Wait for component to load completely
+    await wrapper.vm.$nextTick()
+    await flushPromises()
 
     // Try to add an empty skill
     const skillInput = wrapper.find('.skills-input .form-input')
@@ -276,7 +424,7 @@ describe('ProfilePage', () => {
     const addSkillButton = wrapper.find('.add-skill-button')
     await addSkillButton.trigger('click')
 
-    // Check that skill count hasn't changed
-    expect(wrapper.vm.profile.skills.length).toBe(initialSkillCount)
+    // Check that tRPC addSkills was not called
+    expect(trpc.user.addSkills.mutate).not.toHaveBeenCalled()
   })
 })

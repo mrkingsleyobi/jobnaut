@@ -102,6 +102,7 @@ app.use((req, res, next) => {
 
 // Import routes
 const userRoutes = require('./routes/user');
+const chatRoutes = require('./routes/chat');
 
 // tRPC middleware
 const trpcMiddleware = createTRPCExpressMiddleware();
@@ -132,6 +133,7 @@ app.get('/', (req, res) => {
 
 // API routes
 app.use('/api/v1/user', userRoutes);
+app.use('/api/v1/chat', chatRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

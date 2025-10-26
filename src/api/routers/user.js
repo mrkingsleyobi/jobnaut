@@ -13,14 +13,8 @@ const userRouter = router({
   // Get current user profile (protected)
   getProfile: protectedProcedure
     .query(async ({ ctx }) => {
-      // In a real implementation, ctx.user would be set by auth middleware
-      // For now, we'll return a mock response
-      return {
-        id: 1,
-        email: 'user@example.com',
-        name: 'Test User',
-        createdAt: new Date(),
-      };
+      // Use the real user profile service to get the user's profile
+      return await userProfileService.getProfile(ctx.user.id);
     }),
 
   // Update user profile (protected)
@@ -32,19 +26,11 @@ const userRouter = router({
       skills: z.array(z.string()).optional(),
     }))
     .mutation(async ({ input, ctx }) => {
-      // In a real implementation, this would update the user's profile
-      // For now, we'll return a mock response
+      // Use the real user profile service to update the user's profile
+      const updatedProfile = await userProfileService.updateProfile(ctx.user.id, input);
       return {
         success: true,
-        profile: {
-          id: 1,
-          email: 'user@example.com',
-          name: input.name || 'Test User',
-          location: input.location || 'Unknown',
-          experienceLevel: input.experienceLevel || 'Unknown',
-          skills: input.skills || [],
-          updatedAt: new Date(),
-        },
+        profile: updatedProfile,
       };
     }),
 
@@ -54,11 +40,11 @@ const userRouter = router({
       skills: z.array(z.string()),
     }))
     .mutation(async ({ input, ctx }) => {
-      // In a real implementation, this would add skills to the user's profile
-      // For now, we'll return a mock response
+      // Use the real user profile service to add skills to the user's profile
+      const updatedProfile = await userProfileService.addSkills(ctx.user.id, input.skills);
       return {
         success: true,
-        message: `Added ${input.skills.length} skills to profile`,
+        profile: updatedProfile,
       };
     }),
 
@@ -68,11 +54,11 @@ const userRouter = router({
       skills: z.array(z.string()),
     }))
     .mutation(async ({ input, ctx }) => {
-      // In a real implementation, this would remove skills from the user's profile
-      // For now, we'll return a mock response
+      // Use the real user profile service to remove skills from the user's profile
+      const updatedProfile = await userProfileService.removeSkills(ctx.user.id, input.skills);
       return {
         success: true,
-        message: `Removed ${input.skills.length} skills from profile`,
+        profile: updatedProfile,
       };
     }),
 });

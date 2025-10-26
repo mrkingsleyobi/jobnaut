@@ -18,10 +18,11 @@ const publicProcedure = t.procedure;
  * @returns {Object} Context object
  */
 const createContext = async (opts) => {
-  // In a real implementation, you would extract user from request
-  // For now, we'll pass a mock context
+  // Extract user from request (set by auth middleware)
+  const user = opts?.req?.user;
+
   return {
-    // user will be set by auth middleware
+    user: user || null
   };
 };
 
@@ -29,14 +30,18 @@ const createContext = async (opts) => {
  * Auth middleware for protected procedures
  */
 const authMiddleware = t.middleware(async ({ ctx, next }) => {
+  // Check if user is authenticated
+  if (!ctx.user) {
+    throw new Error('Unauthorized: Authentication required');
+  }
+
   // In a real implementation, you would validate the user session
-  // For now, we'll allow all requests through
-  // In a real app, you would check if ctx.user exists and is valid
+  // For now, we'll allow authenticated requests through
 
   return next({
     ctx: {
       ...ctx,
-      // user: validatedUser
+      user: ctx.user
     },
   });
 });

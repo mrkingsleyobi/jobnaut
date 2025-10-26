@@ -1,7 +1,7 @@
 # JobNaut Backend Dockerfile
 
-# Use Node.js LTS version
-FROM node:20-alpine
+# Use Node.js LTS version (non-Alpine for better Prisma compatibility)
+FROM node:20-slim
 
 # Set working directory
 WORKDIR /app
@@ -9,7 +9,8 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies
+# Install dependencies and OpenSSL for Prisma
+RUN apt-get update && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
 RUN npm ci --only=production
 
 # Copy Prisma schema and generate client
@@ -23,8 +24,8 @@ COPY . .
 EXPOSE 3000
 
 # Create non-root user
-RUN addgroup -g 1001 -S nodejs
-RUN adduser -S nextjs -u 1001
+RUN groupadd --gid 1001 nodejs
+RUN useradd --uid 1001 --gid 1001 nextjs
 USER nextjs
 
 # Health check

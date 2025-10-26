@@ -4,6 +4,25 @@ import { createRouter, createMemoryHistory } from 'vue-router'
 import JobDetailsPage from '../../../../pages/jobs/[id].vue'
 import JobCard from '../../../../components/JobCard.vue'
 
+// Mock the tRPC client module
+vi.mock('../../../../src/api/trpcClient', () => {
+  return {
+    default: {
+      jobs: {
+        getById: {
+          query: vi.fn()
+        },
+        search: {
+          query: vi.fn()
+        }
+      }
+    }
+  }
+})
+
+// Import the mocked module after defining the mock
+import trpc from '../../../../src/api/trpcClient'
+
 // Mock the route params
 const mockRoute = {
   params: { id: '1' },
@@ -52,6 +71,38 @@ describe('JobDetailsPage', () => {
   beforeEach(async () => {
     // Reset mocks
     vi.clearAllMocks()
+
+    // Mock tRPC jobs getById response
+    trpc.jobs.getById.query.mockResolvedValue({
+      id: 1,
+      title: 'Software Engineer',
+      company: 'Tech Corp',
+      location: 'San Francisco, CA',
+      description: 'Exciting opportunity for a software engineer to join our team. We are looking for someone with experience in JavaScript, React, and Node.js. You will be working on cutting-edge web applications and collaborating with a talented team of developers. This is a great opportunity to grow your skills and advance your career in a dynamic environment. Responsibilities include developing new features, maintaining existing code, and participating in code reviews.',
+      skills: ['JavaScript', 'React', 'Node.js', 'Python', 'SQL'],
+      postedDate: new Date().toISOString(),
+      applicationLink: 'https://example.com/apply/1',
+      experienceLevel: 'Mid Level',
+      jobType: 'Full-time'
+    })
+
+    // Mock tRPC jobs search response for similar jobs
+    trpc.jobs.search.query.mockResolvedValue({
+      jobs: [
+        {
+          id: 2,
+          title: 'Product Manager',
+          company: 'Startup Inc',
+          location: 'New York, NY',
+          description: 'Lead product development for our innovative platform...',
+          skills: ['Product Management', 'Agile', 'UX'],
+          postedDate: new Date().toISOString()
+        }
+      ],
+      totalCount: 1,
+      limit: 4,
+      offset: 0
+    })
 
     wrapper = mount(JobDetailsPage, {
       global: {

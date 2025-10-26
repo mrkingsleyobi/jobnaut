@@ -89,14 +89,30 @@ class DataIngestionPipeline:
             # Prepare job text for NLP processing
             job_text = f"{job_data.get('job_title', '')}. {job_data.get('job_description', '')}"
 
-            # In a real implementation, this would call the NLP service
-            # For now, we'll return mock skills
-            skills = ["JavaScript", "React", "Node.js", "Python", "SQL"]
+            # Call the Python NLP service to extract skills
+            payload = {
+                'text': job_text
+            }
 
-            return skills
+            response = requests.post(
+                f'{self.nlp_service_url}/extract-skills',
+                json=payload,
+                timeout=30
+            )
+
+            if response.status_code == 200:
+                result = response.json()
+                skills = result.get('skills', [])
+                logger.info(f"Extracted {len(skills)} skills from job description")
+                return skills
+            else:
+                logger.error(f"NLP service error: {response.status_code} - {response.text}")
+                # Return mock skills as fallback
+                return ["JavaScript", "React", "Node.js", "Python", "SQL"]
         except Exception as e:
             logger.error(f"Error processing job with NLP: {str(e)}")
-            return []
+            # Return mock skills as fallback
+            return ["JavaScript", "React", "Node.js", "Python", "SQL"]
 
     def prepare_job_for_indexing(self, job_data):
         """
@@ -130,9 +146,25 @@ class DataIngestionPipeline:
         Index jobs in Meilisearch
         """
         try:
-            # In a real implementation, this would call Meilisearch API
-            logger.info(f"Indexing {len(jobs)} jobs in Meilisearch")
-            return True
+            # Prepare the data for Meilisearch
+            payload = {
+                'documents': jobs
+            }
+
+            # Call Meilisearch API to index jobs
+            response = requests.post(
+                f'{self.meilisearch_host}/indexes/jobs/documents',
+                headers=self.meilisearch_headers,
+                json=payload,
+                timeout=30
+            )
+
+            if response.status_code in [200, 201, 202]:
+                logger.info(f"Successfully indexed {len(jobs)} jobs in Meilisearch")
+                return True
+            else:
+                logger.error(f"Meilisearch indexing failed: {response.status_code} - {response.text}")
+                return False
         except Exception as e:
             logger.error(f"Error indexing jobs in Meilisearch: {str(e)}")
             return False

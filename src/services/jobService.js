@@ -90,12 +90,23 @@ class JobService {
    * @returns {Promise<Array>} Array of extracted skills
    */
   async extractSkillsWithNLP(description) {
+    // Skip NLP processing if service is not configured or in test environment
+    if (!this.NLP_SERVICE_URL || this.NLP_SERVICE_URL === 'http://localhost:8000' || process.env.NODE_ENV === 'test') {
+      console.log('Skipping NLP skill extraction - service not available');
+      return [];
+    }
+
     try {
-      // In a real implementation, this would call the Python NLP service
-      // For now, we'll return mock skills
-      return ['JavaScript', 'React', 'Node.js', 'Python'];
+      // Call the Python NLP service to extract skills
+      const response = await axios.post(`${this.NLP_SERVICE_URL}/extract-skills`, {
+        text: description
+      }, {
+        timeout: 10000 // 10 second timeout
+      });
+
+      return response.data.skills || [];
     } catch (error) {
-      console.error('Error extracting skills with NLP:', error.message);
+      console.warn('Warning: Could not extract skills with NLP:', error.message);
       // Return empty array if NLP processing fails
       return [];
     }
@@ -107,12 +118,23 @@ class JobService {
    * @returns {Promise<Array<Array>>} Array of skill arrays for each description
    */
   async batchExtractSkills(descriptions) {
+    // Skip NLP processing if service is not configured or in test environment
+    if (!this.NLP_SERVICE_URL || this.NLP_SERVICE_URL === 'http://localhost:8000' || process.env.NODE_ENV === 'test') {
+      console.log('Skipping batch NLP skill extraction - service not available');
+      return descriptions.map(() => []);
+    }
+
     try {
-      // In a real implementation, this would call the Python NLP service with batch data
-      // For now, we'll return mock skills for each description
-      return descriptions.map(() => ['JavaScript', 'React', 'Node.js', 'Python']);
+      // Call the Python NLP service to extract skills for multiple descriptions
+      const response = await axios.post(`${this.NLP_SERVICE_URL}/batch-extract-skills`, {
+        texts: descriptions
+      }, {
+        timeout: 30000 // 30 second timeout for batch processing
+      });
+
+      return response.data.skills || descriptions.map(() => []);
     } catch (error) {
-      console.error('Error batch extracting skills with NLP:', error.message);
+      console.warn('Warning: Could not batch extract skills with NLP:', error.message);
       // Return empty arrays if NLP processing fails
       return descriptions.map(() => []);
     }
@@ -160,13 +182,42 @@ class JobService {
    * @returns {Promise<void>}
    */
   async indexJobsInMeilisearch(jobs) {
+    // Skip Meilisearch indexing if host is not configured or in test environment
+    if (!this.MEILISEARCH_HOST || this.MEILISEARCH_HOST === 'http://localhost:7700' || process.env.NODE_ENV === 'test') {
+      console.log('Skipping Meilisearch indexing - service not available');
+      return;
+    }
+
     try {
-      // In a real implementation, this would call Meilisearch API
-      // For now, we'll just log the operation
-      console.log(`Indexing ${jobs.length} jobs in Meilisearch`);
+      // Prepare jobs for Meilisearch indexing
+      const jobsForIndexing = jobs.map(job => ({
+        id: job.id || job.sourceId,
+        title: job.title,
+        company: job.company,
+        location: job.location,
+        description: job.description,
+        skills: job.skills || [],
+        postedDate: job.postedDate,
+        applicationLink: job.applicationLink,
+        source: job.source || 'jobnaut'
+      }));
+
+      // Call Meilisearch API to index jobs
+      await axios.post(`${this.MEILISEARCH_HOST}/indexes/jobs/documents`,
+        jobsForIndexing,
+        {
+          headers: {
+            'Authorization': `Bearer ${this.MEILISEARCH_API_KEY}`,
+            'Content-Type': 'application/json'
+          },
+          timeout: 30000 // 30 second timeout
+        }
+      );
+
+      console.log(`Successfully indexed ${jobsForIndexing.length} jobs in Meilisearch`);
     } catch (error) {
-      console.error('Error indexing jobs in Meilisearch:', error.message);
-      throw new Error(`Failed to index jobs in Meilisearch: ${error.message}`);
+      console.warn('Warning: Could not index jobs in Meilisearch:', error.message);
+      // Don't throw error to prevent breaking the application if Meilisearch is unavailable
     }
   }
 
@@ -310,24 +361,62 @@ class JobService {
    */
   async getJobRecommendations(userId, userSkills = []) {
     try {
-      // In a real implementation, this would use user skills to find matching jobs
-      // For now, we'll return mock data
-      return [
-        {
-          id: 1,
-          title: 'Senior Software Engineer',
-          company: 'Innovative Tech',
-          location: 'Remote',
-          description: 'Lead development of cutting-edge applications...',
-          skills: ['JavaScript', 'React', 'Node.js', 'Python'],
-          postedDate: new Date().toISOString(),
-          applicationLink: 'https://example.com/apply/1',
-          matchScore: 0.95
+      // First, get user's profile to understand their skills and preferences
+      // This would typically come from a user service
+      const userProfile = await this.getUserProfile(userId);
+
+      // Get jobs that match user skills
+      const matchingJobs = await jobModel.getJobsBySkills(userSkills, 1, 20);
+
+      // Add match scores based on skill overlap
+      const jobsWithScores = matchingJobs.jobs.map(job => {
+        let skills = [];
+        if (job.skills) {
+          try {
+            skills = JSON.parse(job.skills);
+          } catch (e) {
+            skills = [];
+          }
         }
-      ];
+
+        // Calculate match score based on skill overlap
+        const matchingSkills = skills.filter(skill =>
+          userSkills.includes(skill)
+        );
+        const matchScore = skills.length > 0 ? matchingSkills.length / skills.length : 0;
+
+        return {
+          ...job,
+          skills: skills,
+          matchScore: matchScore,
+          postedDate: job.postedDate.toISOString()
+        };
+      });
+
+      // Sort by match score (highest first)
+      return jobsWithScores.sort((a, b) => b.matchScore - a.matchScore);
     } catch (error) {
       console.error('Error getting job recommendations:', error.message);
       throw new Error(`Failed to get job recommendations: ${error.message}`);
+    }
+  }
+
+  /**
+   * Get user profile (helper method)
+   * @param {number} userId - User ID
+   * @returns {Promise<Object>} User profile
+   */
+  async getUserProfile(userId) {
+    try {
+      // This would typically use a user service
+      // For now, we'll return a basic profile structure
+      return {
+        id: userId,
+        skills: []
+      };
+    } catch (error) {
+      console.error('Error getting user profile:', error.message);
+      return { id: userId, skills: [] };
     }
   }
 }

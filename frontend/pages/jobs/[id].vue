@@ -87,6 +87,7 @@
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import JobCard from '../../components/JobCard.vue'
+import trpc from '../../src/api/trpcClient'
 
 // Route and router
 const route = useRoute()
@@ -97,53 +98,43 @@ const job = ref(null)
 const loading = ref(true)
 const isSaved = ref(false)
 const savedJobs = ref(new Set())
-
-// Mock similar jobs data
-const similarJobs = ref([
-  {
-    id: 2,
-    title: 'Product Manager',
-    company: 'Startup Inc',
-    location: 'New York, NY',
-    description: 'Lead product development for our innovative platform...',
-    skills: ['Product Management', 'Agile', 'UX'],
-    postedDate: new Date().toISOString()
-  },
-  {
-    id: 4,
-    title: 'Data Scientist',
-    company: 'Analytics Pro',
-    location: 'Los Angeles, CA',
-    description: 'Analyze complex datasets to drive business insights...',
-    skills: ['Python', 'Machine Learning', 'SQL'],
-    postedDate: new Date().toISOString()
-  }
-])
-
-// Mock job data for now
-const mockJob = {
-  id: 1,
-  title: 'Software Engineer',
-  company: 'Tech Corp',
-  location: 'San Francisco, CA',
-  description: 'Exciting opportunity for a software engineer to join our team. We are looking for someone with experience in JavaScript, React, and Node.js. You will be working on cutting-edge web applications and collaborating with a talented team of developers. This is a great opportunity to grow your skills and advance your career in a dynamic environment. Responsibilities include developing new features, maintaining existing code, and participating in code reviews.',
-  skills: ['JavaScript', 'React', 'Node.js', 'Python', 'SQL'],
-  postedDate: new Date().toISOString(),
-  applicationLink: 'https://example.com/apply/1'
-}
+const similarJobs = ref([])
 
 // Methods
-const loadJobDetails = () => {
+const loadJobDetails = async () => {
   const jobId = route.params.id
   loading.value = true
 
-  // Simulate API call
-  setTimeout(() => {
-    job.value = mockJob
+  try {
+    // Fetch job details from backend using tRPC
+    const jobData = await trpc.jobs.getById.query({ id: parseInt(jobId) })
+    job.value = jobData
+
     // Check if job is saved
     isSaved.value = savedJobs.value.has(parseInt(jobId))
+
+    // Fetch similar jobs (using search with job title as query)
+    if (jobData.title) {
+      const searchResult = await trpc.jobs.search.query({
+        query: jobData.title,
+        limit: 4,
+        offset: 0
+      })
+
+      // Filter out the current job and take first 2
+      similarJobs.value = searchResult.jobs
+        .filter(j => j.id !== jobData.id)
+        .slice(0, 2)
+        .map(j => ({
+          ...j,
+          postedDate: j.postedDate || new Date().toISOString()
+        }))
+    }
+  } catch (error) {
+    console.error('Error loading job details:', error)
+  } finally {
     loading.value = false
-  }, 500)
+  }
 }
 
 const toggleSaveJob = () => {

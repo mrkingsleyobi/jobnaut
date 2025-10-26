@@ -17,6 +17,7 @@ type LazyComponent<T> = DefineComponent<HydrationStrategies, {}, {}, {}, {}, {},
 export const JobCard: typeof import("../components/JobCard.vue")['default']
 export const JobSearch: typeof import("../components/JobSearch.vue")['default']
 export const ChatbotChatComponent: typeof import("../components/chatbot/ChatComponent.vue")['default']
+export const VisualizationsSkillGapAnalysis: typeof import("../components/visualizations/SkillGapAnalysis.vue")['default']
 export const NuxtWelcome: typeof import("../node_modules/nuxt/dist/app/components/welcome.vue")['default']
 export const NuxtLayout: typeof import("../node_modules/nuxt/dist/app/components/nuxt-layout")['default']
 export const NuxtErrorBoundary: typeof import("../node_modules/nuxt/dist/app/components/nuxt-error-boundary.vue")['default']
@@ -43,6 +44,7 @@ export const NuxtIsland: typeof import("../node_modules/nuxt/dist/app/components
 export const LazyJobCard: LazyComponent<typeof import("../components/JobCard.vue")['default']>
 export const LazyJobSearch: LazyComponent<typeof import("../components/JobSearch.vue")['default']>
 export const LazyChatbotChatComponent: LazyComponent<typeof import("../components/chatbot/ChatComponent.vue")['default']>
+export const LazyVisualizationsSkillGapAnalysis: LazyComponent<typeof import("../components/visualizations/SkillGapAnalysis.vue")['default']>
 export const LazyNuxtWelcome: LazyComponent<typeof import("../node_modules/nuxt/dist/app/components/welcome.vue")['default']>
 export const LazyNuxtLayout: LazyComponent<typeof import("../node_modules/nuxt/dist/app/components/nuxt-layout")['default']>
 export const LazyNuxtErrorBoundary: LazyComponent<typeof import("../node_modules/nuxt/dist/app/components/nuxt-error-boundary.vue")['default']>

@@ -4,14 +4,22 @@ import { createRouter, createMemoryHistory } from 'vue-router'
 import JobsPage from '../../../../pages/jobs/index.vue'
 import JobSearch from '../../../../components/JobSearch.vue'
 import JobCard from '../../../../components/JobCard.vue'
-import SearchService from '../../../../services/searchService'
 
-// Mock search service module
-vi.mock('../../../../services/searchService', () => ({
-  default: {
-    searchJobs: vi.fn()
+// Mock the tRPC client module
+vi.mock('../../../../src/api/trpcClient', () => {
+  return {
+    default: {
+      jobs: {
+        search: {
+          query: vi.fn()
+        }
+      }
+    }
   }
-}))
+})
+
+// Import the mocked module after defining the mock
+import trpc from '../../../../src/api/trpcClient'
 
 // Mock vue-router
 const mockRouter = {
@@ -45,8 +53,8 @@ describe('JobsPage', () => {
     // Reset mocks
     vi.clearAllMocks()
 
-    // Mock search service response
-    SearchService.searchJobs.mockResolvedValue({
+    // Mock tRPC jobs search response
+    trpc.jobs.search.query.mockResolvedValue({
       jobs: [
         {
           id: 1,
@@ -55,13 +63,14 @@ describe('JobsPage', () => {
           location: 'San Francisco, CA',
           description: 'Exciting opportunity...',
           skills: ['JavaScript', 'React'],
-          postedDate: new Date().toISOString()
+          postedDate: new Date().toISOString(),
+          experienceLevel: 'Mid Level',
+          jobType: 'Full-time'
         }
       ],
-      total: 1,
-      page: 1,
+      totalCount: 1,
       limit: 10,
-      totalPages: 1
+      offset: 0
     })
 
     // Install router
@@ -155,14 +164,13 @@ describe('JobsPage', () => {
 
     await flushPromises()
 
-    // Check that search service was called with correct params
-    expect(SearchService.searchJobs).toHaveBeenCalledWith({
+    // Check that tRPC jobs search was called with correct params
+    expect(trpc.jobs.search.query).toHaveBeenCalledWith({
       query: 'developer',
       location: 'remote',
-      experience: 'mid',
-      jobType: 'full-time',
-      page: 1,
-      limit: 10
+      experienceLevel: 'mid',
+      limit: 10,
+      offset: 0
     })
   })
 
@@ -177,7 +185,7 @@ describe('JobsPage', () => {
     await flushPromises()
 
     // Reset mock to track new calls
-    SearchService.searchJobs.mockClear()
+    trpc.jobs.search.query.mockClear()
 
     // Emit clear filters event from JobSearch component
     const jobSearch = wrapper.findComponent(JobSearch)
@@ -185,21 +193,20 @@ describe('JobsPage', () => {
 
     await flushPromises()
 
-    // Check that search service was called again (to reload all jobs)
-    expect(SearchService.searchJobs).toHaveBeenCalled()
+    // Check that tRPC jobs search was called again (to reload all jobs)
+    expect(trpc.jobs.search.query).toHaveBeenCalled()
   })
 
   it('handles pagination', async () => {
-    // Mock search service to return multiple pages
-    SearchService.searchJobs.mockResolvedValue({
+    // Mock tRPC jobs search to return multiple pages
+    trpc.jobs.search.query.mockResolvedValue({
       jobs: [
         { id: 1, title: 'Job 1', skills: [] },
         { id: 2, title: 'Job 2', skills: [] }
       ],
-      total: 25,
-      page: 1,
+      totalCount: 25,
       limit: 10,
-      totalPages: 3
+      offset: 0
     })
 
     const wrapper = mount(JobsPage, {
@@ -215,15 +222,14 @@ describe('JobsPage', () => {
     expect(wrapper.text()).toContain('Page 1 of 3')
 
     // Mock next page response
-    SearchService.searchJobs.mockResolvedValueOnce({
+    trpc.jobs.search.query.mockResolvedValueOnce({
       jobs: [
         { id: 11, title: 'Job 11', skills: [] },
         { id: 12, title: 'Job 12', skills: [] }
       ],
-      total: 25,
-      page: 2,
+      totalCount: 25,
       limit: 10,
-      totalPages: 3
+      offset: 10
     })
 
     // Click next button
@@ -232,9 +238,9 @@ describe('JobsPage', () => {
 
     await flushPromises()
 
-    // Check that search service was called with page 2
-    expect(SearchService.searchJobs).toHaveBeenCalledWith(
-      expect.objectContaining({ page: 2 })
+    // Check that tRPC jobs search was called with offset for page 2
+    expect(trpc.jobs.search.query).toHaveBeenCalledWith(
+      expect.objectContaining({ offset: 10 })
     )
   })
 
@@ -283,13 +289,12 @@ describe('JobsPage', () => {
   })
 
   it('shows no results message when search returns empty', async () => {
-    // Mock search service to return no results
-    SearchService.searchJobs.mockResolvedValue({
+    // Mock tRPC jobs search to return no results
+    trpc.jobs.search.query.mockResolvedValue({
       jobs: [],
-      total: 0,
-      page: 1,
+      totalCount: 0,
       limit: 10,
-      totalPages: 0
+      offset: 0
     })
 
     const wrapper = mount(JobsPage, {

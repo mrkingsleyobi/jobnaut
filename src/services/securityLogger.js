@@ -10,11 +10,12 @@ const path = require('path');
 class SecurityLogger {
   constructor() {
     // Create logs directory if it doesn't exist
-    const logDir = path.join(__dirname, '../../logs');
+    const logDirPath = path.join(__dirname, '../logs');
     const fs = require('fs');
-    if (!fs.existsSync(logDir)) {
-      fs.mkdirSync(logDir, { recursive: true });
+    if (!fs.existsSync(logDirPath)) {
+      fs.mkdirSync(logDirPath, { recursive: true });
     }
+    const logDir = logDirPath;
 
     // Create security logger with multiple transports
     this.logger = winston.createLogger({

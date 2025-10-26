@@ -4,7 +4,7 @@
 
     <div class="results-header">
       <h2 class="results-title">Job Listings</h2>
-      <p class="results-count">{{ jobs.length }} jobs found</p>
+      <p class="results-count">{{ searchResults.totalCount }} jobs found</p>
     </div>
 
     <div class="results-section">
@@ -50,6 +50,7 @@ import { useRouter } from 'vue-router'
 import JobSearch from '../../components/JobSearch.vue'
 import JobCard from '../../components/JobCard.vue'
 import searchService from '../../services/searchService'
+import trpc from '../../src/api/trpcClient'
 
 // Router
 const router = useRouter()
@@ -67,88 +68,45 @@ const searchParams = ref({
   jobType: ''
 })
 
-// Mock job data for fallback
-const mockJobs = [
-  {
-    id: 1,
-    title: 'Software Engineer',
-    company: 'Tech Corp',
-    location: 'San Francisco, CA',
-    description: 'Exciting opportunity for a software engineer to join our team...',
-    skills: ['JavaScript', 'React', 'Node.js', 'Python'],
-    postedDate: new Date().toISOString()
-  },
-  {
-    id: 2,
-    title: 'Product Manager',
-    company: 'Startup Inc',
-    location: 'New York, NY',
-    description: 'Lead product development for our innovative platform...',
-    skills: ['Product Management', 'Agile', 'UX', 'Analytics'],
-    postedDate: new Date().toISOString()
-  },
-  {
-    id: 3,
-    title: 'Senior Frontend Developer',
-    company: 'Web Solutions',
-    location: 'Remote',
-    description: 'Join our team building cutting-edge web applications...',
-    skills: ['React', 'TypeScript', 'CSS', 'GraphQL'],
-    postedDate: new Date().toISOString()
-  },
-  {
-    id: 4,
-    title: 'Data Scientist',
-    company: 'Analytics Pro',
-    location: 'Los Angeles, CA',
-    description: 'Analyze complex datasets to drive business insights...',
-    skills: ['Python', 'Machine Learning', 'SQL', 'Statistics'],
-    postedDate: new Date().toISOString()
-  },
-  {
-    id: 5,
-    title: 'UX Designer',
-    company: 'Design Studio',
-    location: 'Seattle, WA',
-    description: 'Create intuitive user experiences for our products...',
-    skills: ['Figma', 'User Research', 'Prototyping', 'UI Design'],
-    postedDate: new Date().toISOString()
-  },
-  {
-    id: 6,
-    title: 'DevOps Engineer',
-    company: 'Cloud Services',
-    location: 'Remote',
-    description: 'Manage and optimize our cloud infrastructure...',
-    skills: ['AWS', 'Docker', 'Kubernetes', 'CI/CD'],
-    postedDate: new Date().toISOString()
-  }
-]
+// Reactive state for search results
+const searchResults = ref({
+  jobs: [],
+  totalCount: 0
+})
 
 // Methods
 const loadJobs = async () => {
   loading.value = true
 
   try {
-    const result = await searchService.searchJobs({
-      query: searchParams.value.query,
-      location: searchParams.value.location,
-      experience: searchParams.value.experience,
-      jobType: searchParams.value.jobType,
-      page: currentPage.value,
-      limit: 10
-    })
+    // Prepare search parameters for tRPC
+    const searchInput = {
+      query: searchParams.value.query || undefined,
+      location: searchParams.value.location || undefined,
+      experienceLevel: searchParams.value.experience || undefined,
+      limit: 10,
+      offset: (currentPage.value - 1) * 10
+    }
+
+    // Remove undefined properties
+    Object.keys(searchInput).forEach(key =>
+      searchInput[key] === undefined && delete searchInput[key]
+    )
+
+    // Call tRPC jobs search endpoint
+    const result = await trpc.jobs.search.query(searchInput)
+
+    searchResults.value = result
     jobs.value = result.jobs
-    totalPages.value = result.totalPages
+    totalPages.value = Math.ceil(result.totalCount / 10)
     loading.value = false
   } catch (error) {
     console.error('Error loading jobs:', error)
-    // Use mock data as fallback
-    setTimeout(() => {
-      jobs.value = mockJobs
-      totalPages.value = Math.ceil(mockJobs.length / 10)
-      loading.value = false
-    }, 500)
+    // Reset to empty state on error
+    jobs.value = []
+    searchResults.value = { jobs: [], totalCount: 0 }
+    totalPages.value = 0
+    loading.value = false
   }
 }
 
