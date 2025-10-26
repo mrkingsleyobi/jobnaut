@@ -1,9 +1,9 @@
-# JobNaut - AI-Powered Job Market Navigator
+# JobNaut - AI Career Coach & Job Search Platform | Skill Gap Analysis & Personalized Recommendations
 
 [![CI](https://github.com/mrkingsleyobi/jobnaut/actions/workflows/ci.yml/badge.svg)](https://github.com/mrkingsleyobi/jobnaut/actions/workflows/ci.yml)
 [![Deploy](https://github.com/mrkingsleyobi/jobnaut/actions/workflows/deploy.yml/badge.svg)](https://github.com/mrkingsleyobi/jobnaut/actions/workflows/deploy.yml)
 
-JobNaut is a comprehensive AI-powered job market navigator that helps job seekers discover opportunities and receive personalized career coaching through advanced AI technology.
+JobNaut is a cutting-edge AI Career Coach & Job Search Platform that delivers personalized job recommendations, skill gap analysis, and career development insights. Our AI-powered job market navigator helps job seekers discover remote work opportunities, optimize their career paths, and receive personalized coaching through advanced artificial intelligence technology.
 
 ## 🚀 Features
 
@@ -14,10 +14,11 @@ JobNaut is a comprehensive AI-powered job market navigator that helps job seeker
 - Fast search powered by Meilisearch
 
 ### 🤖 AI Career Coach
-- Personalized career guidance and advice
-- Interactive chatbot powered by Hugging Face models
-- Skill gap analysis and improvement suggestions
-- Resume optimization tips
+- Personalized career guidance and advice with AI career coach
+- Interactive chatbot powered by Hugging Face models for career coaching
+- Advanced skill gap analysis tool with personalized improvement suggestions
+- AI-powered resume optimization tips for better job applications
+- Career transition assistant for switching industries or roles
 
 ### 👤 User Profile Management
 - Comprehensive profile with skills and experience
@@ -26,10 +27,11 @@ JobNaut is a comprehensive AI-powered job market navigator that helps job seeker
 - Career progress monitoring
 
 ### 📊 Analytics & Insights
-- Skill demand trend analysis
-- Salary range visualization
-- Market insights and recommendations
-- Personalized career path suggestions
+- Skill demand trend analysis for 2025 job market
+- Salary range visualization and compensation insights
+- Market insights and personalized job market recommendations
+- Career path suggestions with growth opportunity analysis
+- Professional skills assessment and competency mapping
 
 ### 🛡️ Security & Privacy
 - Secure authentication with Clerk
@@ -167,6 +169,7 @@ k6 run tests/load-testing/auth-test.js
 - [Performance Optimization](docs/performance-optimization.md)
 - [Load Testing](docs/load-testing.md)
 - [Production Deployment](docs/production-deployment.md)
+- [Data Pipeline](docs/data-pipeline.md)
 
 ## 🤝 Contributing
 
@@ -197,3 +200,7 @@ JobNaut is production-ready with:
 - Scalable architecture
 
 Start helping job seekers today with AI-powered career navigation!
+
+## 🔍 SEO Keywords
+
+JobNaut - AI career coach, job search platform, skill gap analysis tool, personalized job recommendations, remote work opportunities 2025, career transition AI assistant, job market insights 2025, professional skills assessment, career development platform, job matching algorithm, resume optimization AI, AI-powered career guidance, personalized career coaching, skill-based job search, intelligent job matching, career advancement tool, job market analytics, professional development AI, career path optimization, employment opportunity finder
