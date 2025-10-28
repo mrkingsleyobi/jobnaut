@@ -784,4 +784,3 @@ const getGapClass = (gap) => {
   }
 }
 </style>
-</template>
