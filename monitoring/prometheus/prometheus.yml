@@ -1,0 +1,84 @@
+# Prometheus Configuration for JobNaut Monitoring
+# Defines scrape targets, alerting rules, and recording rules
+
+global:
+  scrape_interval: 15s # Set the scrape interval to every 15 seconds
+  evaluation_interval: 15s # Evaluate rules every 15 seconds
+  external_labels:
+    cluster: 'jobnaut'
+    environment: 'development'
+
+# Alertmanager configuration
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+            - alertmanager:9093
+
+# Load rules once and periodically evaluate them
+rule_files:
+  # - "alerts/*.yml"
+  # - "rules/*.yml"
+
+# Scrape configurations
+scrape_configs:
+  # Prometheus self-monitoring
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+        labels:
+          service: 'prometheus'
+
+  # Node Exporter - System metrics
+  - job_name: 'node-exporter'
+    static_configs:
+      - targets: ['node-exporter:9100']
+        labels:
+          service: 'node-exporter'
+          instance: 'jobnaut-server'
+
+  # JobNaut API Backend
+  - job_name: 'jobnaut-api'
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['host.docker.internal:3001'] # Adjust port as needed
+        labels:
+          service: 'jobnaut-api'
+          environment: 'development'
+    # Optional: Add scraping authentication if metrics endpoint is protected
+    # basic_auth:
+    #   username: 'metrics'
+    #   password: 'secure-password'
+
+  # PostgreSQL Exporter (if using PostgreSQL)
+  # - job_name: 'postgres-exporter'
+  #   static_configs:
+  #     - targets: ['postgres-exporter:9187']
+  #       labels:
+  #         service: 'postgresql'
+
+  # Redis Exporter (if using Redis)
+  # - job_name: 'redis-exporter'
+  #   static_configs:
+  #     - targets: ['redis-exporter:9121']
+  #       labels:
+  #         service: 'redis'
+
+  # Grafana monitoring
+  - job_name: 'grafana'
+    static_configs:
+      - targets: ['grafana:3000']
+        labels:
+          service: 'grafana'
+
+# Remote write configuration (optional, for long-term storage)
+# remote_write:
+#   - url: "http://remote-storage:9201/write"
+#     write_relabel_configs:
+#       - source_labels: [__name__]
+#         regex: 'expensive_metric.*'
+#         action: drop
+
+# Remote read configuration (optional)
+# remote_read:
+#   - url: "http://remote-storage:9201/read"

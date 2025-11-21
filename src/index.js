@@ -3,10 +3,14 @@
 const express = require('express');
 const envConfig = require('../config/env');
 const { createTRPCExpressMiddleware } = require('./api/server');
+const { initSentry, getSentryErrorHandler } = require('./utils/sentry');
 
 // Initialize Express app
 const app = express();
 const PORT = envConfig.getPort();
+
+// Initialize Sentry (must be first)
+initSentry(app);
 
 // Security middleware
 const cors = require('cors');
@@ -107,19 +111,27 @@ app.use((req, res, next) => {
 // Import routes
 const userRoutes = require('./routes/user');
 const chatRoutes = require('./routes/chat');
+const healthRoutes = require('./routes/health');
+
+// Import metrics middleware
+const { metricsMiddleware, metricsEndpoint } = require('./middleware/metrics');
+
+// Add metrics middleware (should be early in the middleware stack)
+if (process.env.PROMETHEUS_ENABLED !== 'false') {
+  app.use(metricsMiddleware);
+}
 
 // tRPC middleware
 const trpcMiddleware = createTRPCExpressMiddleware();
 app.use('/trpc', trpcMiddleware);
 
-// Health check endpoint
-app.get('/health', (req, res) => {
-  res.json({
-    status: 'OK',
-    timestamp: new Date().toISOString(),
-    service: 'JobNaut API',
-  });
-});
+// Health check endpoints
+app.use('/health', healthRoutes);
+
+// Metrics endpoint for Prometheus
+if (process.env.PROMETHEUS_ENABLED !== 'false') {
+  app.get('/metrics', metricsEndpoint);
+}
 
 // Basic routes
 app.get('/', (req, res) => {
@@ -138,6 +150,9 @@ app.get('/', (req, res) => {
 // API routes
 app.use('/api/v1/user', userRoutes);
 app.use('/api/v1/chat', chatRoutes);
+
+// Sentry error handler (must be before other error handlers)
+app.use(getSentryErrorHandler());
 
 // Error handling middleware
 app.use((err, req, res, next) => {

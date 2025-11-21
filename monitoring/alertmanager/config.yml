@@ -1,0 +1,106 @@
+# Alertmanager Configuration for JobNaut
+# Handles alert routing, grouping, and notifications
+
+global:
+  resolve_timeout: 5m
+  # SMTP configuration for email alerts (optional)
+  # smtp_smarthost: 'smtp.gmail.com:587'
+  # smtp_from: 'alertmanager@jobnaut.com'
+  # smtp_auth_username: 'your-email@gmail.com'
+  # smtp_auth_password: 'your-app-password'
+
+# The directory from which notification templates are read.
+templates:
+  - '/etc/alertmanager/templates/*.tmpl'
+
+# The root route on which each incoming alert enters.
+route:
+  # The labels by which incoming alerts are grouped together.
+  group_by: ['alertname', 'cluster', 'service']
+
+  # When a new group of alerts is created by an incoming alert, wait at
+  # least 'group_wait' to send the initial notification.
+  group_wait: 10s
+
+  # When the first notification was sent, wait 'group_interval' to send a batch
+  # of new alerts that started firing for that group.
+  group_interval: 10s
+
+  # If an alert has successfully been sent, wait 'repeat_interval' to
+  # resend them.
+  repeat_interval: 3h
+
+  # A default receiver
+  receiver: 'team-notifications'
+
+  # Child routes
+  routes:
+    # Critical alerts route
+    - match:
+        severity: critical
+      receiver: 'critical-alerts'
+      continue: true
+
+    # Warning alerts route
+    - match:
+        severity: warning
+      receiver: 'warning-alerts'
+
+    # Database alerts
+    - match:
+        service: database
+      receiver: 'database-team'
+
+# Inhibition rules allow to mute a set of alerts given that another alert is firing.
+inhibit_rules:
+  - source_match:
+      severity: 'critical'
+    target_match:
+      severity: 'warning'
+    # Apply inhibition if the alertname is the same.
+    equal: ['alertname', 'cluster', 'service']
+
+# Receivers configuration
+receivers:
+  # Default team notifications
+  - name: 'team-notifications'
+    # Webhook receiver (configure as needed)
+    webhook_configs:
+      - url: 'http://localhost:5001/alerts'
+        send_resolved: true
+
+  # Critical alerts (multiple notification channels)
+  - name: 'critical-alerts'
+    # Email notifications (configure SMTP settings above)
+    # email_configs:
+    #   - to: 'oncall@jobnaut.com'
+    #     headers:
+    #       Subject: '[CRITICAL] JobNaut Alert'
+
+    # Slack notifications (configure webhook URL)
+    # slack_configs:
+    #   - api_url: 'https://hooks.slack.com/services/YOUR/WEBHOOK/URL'
+    #     channel: '#alerts-critical'
+    #     title: '[CRITICAL] {{ .GroupLabels.alertname }}'
+    #     text: '{{ range .Alerts }}{{ .Annotations.description }}{{ end }}'
+
+    # PagerDuty (configure service key)
+    # pagerduty_configs:
+    #   - service_key: 'YOUR_PAGERDUTY_SERVICE_KEY'
+
+  # Warning alerts
+  - name: 'warning-alerts'
+    # Slack notifications
+    # slack_configs:
+    #   - api_url: 'https://hooks.slack.com/services/YOUR/WEBHOOK/URL'
+    #     channel: '#alerts-warning'
+    #     title: '[WARNING] {{ .GroupLabels.alertname }}'
+    #     text: '{{ range .Alerts }}{{ .Annotations.description }}{{ end }}'
+
+  # Database team alerts
+  - name: 'database-team'
+    # Email notifications
+    # email_configs:
+    #   - to: 'database-team@jobnaut.com'
+    #     headers:
+    #       Subject: '[DB] JobNaut Database Alert'

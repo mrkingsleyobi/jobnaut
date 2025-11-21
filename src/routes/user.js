@@ -12,11 +12,27 @@ const router = express.Router();
 /**
  * GET /user/profile
  * Get current user's profile
+ * @deprecated Use tRPC endpoint: user.getProfile instead
  */
 router.get('/profile', authMiddleware, async (req, res) => {
+  // Add deprecation headers
+  res.set({
+    'X-API-Deprecated': 'true',
+    'X-API-Deprecation-Date': '2024-01-01',
+    'X-API-Alternative': 'tRPC: user.getProfile',
+    'X-API-Sunset-Date': '2024-06-01',
+  });
+
   try {
     const profile = await userProfileService.getProfile(req.user.id);
-    res.json({ profile });
+    res.json({
+      profile,
+      _deprecated: {
+        message: 'This REST endpoint is deprecated. Please migrate to tRPC: user.getProfile',
+        alternativeEndpoint: 'user.getProfile',
+        sunsetDate: '2024-06-01',
+      },
+    });
   } catch (error) {
     securityLogger.logSecurityIncident('profile_fetch_error', {
       userId: req.user.id,
@@ -31,6 +47,7 @@ router.get('/profile', authMiddleware, async (req, res) => {
 /**
  * PUT /user/profile
  * Update current user's profile
+ * @deprecated Use tRPC endpoint: user.updateProfile instead
  */
 router.put(
   '/profile',
@@ -43,6 +60,13 @@ router.put(
     body('skills.*').isString().trim().escape().optional({ nullable: true }),
   ],
   async (req, res) => {
+    // Add deprecation headers
+    res.set({
+      'X-API-Deprecated': 'true',
+      'X-API-Deprecation-Date': '2024-01-01',
+      'X-API-Alternative': 'tRPC: user.updateProfile',
+      'X-API-Sunset-Date': '2024-06-01',
+    });
     // Log the profile update attempt
     securityLogger.logDataAccess('user_profile_update', {
       userId: req.user.id,
@@ -65,7 +89,14 @@ router.put(
     try {
       const profileData = req.body;
       const updatedProfile = await userProfileService.updateProfile(req.user.id, profileData);
-      res.json({ profile: updatedProfile });
+      res.json({
+        profile: updatedProfile,
+        _deprecated: {
+          message: 'This REST endpoint is deprecated. Please migrate to tRPC: user.updateProfile',
+          alternativeEndpoint: 'user.updateProfile',
+          sunsetDate: '2024-06-01',
+        },
+      });
     } catch (error) {
       securityLogger.logSecurityIncident('profile_update_error', {
         userId: req.user.id,
@@ -89,6 +120,7 @@ router.put(
 /**
  * POST /user/skills
  * Add skills to user's profile
+ * @deprecated Use tRPC endpoint: user.addSkills instead
  */
 router.post(
   '/skills',
@@ -98,6 +130,13 @@ router.post(
     body('skills.*').isString().trim().escape().isLength({ min: 1, max: 50 }),
   ],
   async (req, res) => {
+    // Add deprecation headers
+    res.set({
+      'X-API-Deprecated': 'true',
+      'X-API-Deprecation-Date': '2024-01-01',
+      'X-API-Alternative': 'tRPC: user.addSkills',
+      'X-API-Sunset-Date': '2024-06-01',
+    });
     // Log the skills add attempt
     securityLogger.logDataAccess('user_skills_add', {
       userId: req.user.id,
@@ -122,7 +161,14 @@ router.post(
       const { skills } = req.body;
 
       const updatedProfile = await userProfileService.addSkills(req.user.id, skills);
-      res.json({ profile: updatedProfile });
+      res.json({
+        profile: updatedProfile,
+        _deprecated: {
+          message: 'This REST endpoint is deprecated. Please migrate to tRPC: user.addSkills',
+          alternativeEndpoint: 'user.addSkills',
+          sunsetDate: '2024-06-01',
+        },
+      });
     } catch (error) {
       securityLogger.logSecurityIncident('skills_add_error', {
         userId: req.user.id,
@@ -143,6 +189,7 @@ router.post(
 /**
  * DELETE /user/skills
  * Remove skills from user's profile
+ * @deprecated Use tRPC endpoint: user.removeSkills instead
  */
 router.delete(
   '/skills',
@@ -152,6 +199,13 @@ router.delete(
     body('skills.*').isString().trim().escape().isLength({ min: 1, max: 50 }),
   ],
   async (req, res) => {
+    // Add deprecation headers
+    res.set({
+      'X-API-Deprecated': 'true',
+      'X-API-Deprecation-Date': '2024-01-01',
+      'X-API-Alternative': 'tRPC: user.removeSkills',
+      'X-API-Sunset-Date': '2024-06-01',
+    });
     // Log the skills remove attempt
     securityLogger.logDataAccess('user_skills_remove', {
       userId: req.user.id,
@@ -176,7 +230,14 @@ router.delete(
       const { skills } = req.body;
 
       const updatedProfile = await userProfileService.removeSkills(req.user.id, skills);
-      res.json({ profile: updatedProfile });
+      res.json({
+        profile: updatedProfile,
+        _deprecated: {
+          message: 'This REST endpoint is deprecated. Please migrate to tRPC: user.removeSkills',
+          alternativeEndpoint: 'user.removeSkills',
+          sunsetDate: '2024-06-01',
+        },
+      });
     } catch (error) {
       securityLogger.logSecurityIncident('skills_remove_error', {
         userId: req.user.id,

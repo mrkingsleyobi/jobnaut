@@ -157,6 +157,75 @@ const jobsRouter = router({
         throw new Error('Job not found');
       }
     }),
+
+  // Get all jobs with pagination
+  getAll: publicProcedure
+    .input(
+      z.object({
+        page: z.number().min(1).optional().default(1),
+        limit: z.number().min(1).max(100).optional().default(20),
+        sortBy: z.enum(['postedDate', 'title', 'company']).optional().default('postedDate'),
+        sortOrder: z.enum(['asc', 'desc']).optional().default('desc'),
+      })
+    )
+    .query(async ({ input }) => {
+      try {
+        const { page, limit, sortBy, sortOrder } = input;
+
+        // Calculate offset for pagination
+        const offset = (page - 1) * limit;
+
+        // Get all jobs using job service
+        const result = await jobService.searchJobs('', page, limit);
+
+        // Format jobs for response
+        const formattedJobs = result.jobs.map((job) => {
+          let skills = [];
+          if (job.skills) {
+            try {
+              skills = typeof job.skills === 'string' ? JSON.parse(job.skills) : job.skills;
+            } catch (e) {
+              skills = [];
+            }
+          }
+
+          return {
+            id: job.id,
+            title: job.title,
+            company: job.company,
+            location: job.location,
+            description: job.description,
+            skills: skills,
+            postedDate:
+              job.postedDate instanceof Date ? job.postedDate.toISOString() : job.postedDate,
+            applicationLink: job.applicationLink,
+          };
+        });
+
+        return {
+          jobs: formattedJobs,
+          pagination: {
+            page,
+            limit,
+            totalCount: result.total,
+            totalPages: Math.ceil(result.total / limit),
+            hasMore: offset + limit < result.total,
+          },
+        };
+      } catch (error) {
+        console.error('Error getting all jobs:', error);
+        return {
+          jobs: [],
+          pagination: {
+            page: input.page || 1,
+            limit: input.limit || 20,
+            totalCount: 0,
+            totalPages: 0,
+            hasMore: false,
+          },
+        };
+      }
+    }),
 });
 
 module.exports = jobsRouter;

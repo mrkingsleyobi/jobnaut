@@ -26,6 +26,7 @@
     "@ai-sdk/anthropic": "^2.0.37",
     "@ai-sdk/openai": "^2.0.53",
     "@pinia/nuxt": "^0.11.3",
+    "@sentry/vue": "^10.26.0",
     "@trpc/client": "^10.45.2",
     "@trpc/server": "^10.45.2",
     "ai": "^5.0.78",
