@@ -1,0 +1,406 @@
+# Prometheus Alert Rules for JobNaut
+# Defines alerting rules for application, infrastructure, and business metrics
+
+groups:
+  # Application Performance Alerts
+  - name: application_performance
+    interval: 30s
+    rules:
+      - alert: HighErrorRate
+        expr: |
+          sum(rate(jobnaut_http_requests_total{status_code=~"5.."}[5m]))
+          / sum(rate(jobnaut_http_requests_total[5m])) > 0.01
+        for: 2m
+        labels:
+          severity: critical
+          component: api
+        annotations:
+          summary: "High error rate detected"
+          description: "Error rate is {{ $value | humanizePercentage }} (threshold: 1%)"
+          runbook_url: "https://docs.jobnaut.com/runbooks/high-error-rate"
+
+      - alert: SlowResponseTime
+        expr: |
+          histogram_quantile(0.95,
+            sum(rate(jobnaut_http_request_duration_seconds_bucket[5m])) by (le, route)
+          ) > 0.5
+        for: 5m
+        labels:
+          severity: warning
+          component: api
+        annotations:
+          summary: "Slow API response time detected"
+          description: "P95 response time for {{ $labels.route }} is {{ $value }}s (threshold: 500ms)"
+          runbook_url: "https://docs.jobnaut.com/runbooks/slow-response"
+
+      - alert: VerySlowResponseTime
+        expr: |
+          histogram_quantile(0.95,
+            sum(rate(jobnaut_http_request_duration_seconds_bucket[5m])) by (le, route)
+          ) > 2
+        for: 3m
+        labels:
+          severity: critical
+          component: api
+        annotations:
+          summary: "Critical: Very slow API response time"
+          description: "P95 response time for {{ $labels.route }} is {{ $value }}s (threshold: 2s)"
+          runbook_url: "https://docs.jobnaut.com/runbooks/slow-response"
+
+      - alert: HighClientErrorRate
+        expr: |
+          sum(rate(jobnaut_http_requests_total{status_code=~"4.."}[5m]))
+          / sum(rate(jobnaut_http_requests_total[5m])) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+          component: api
+        annotations:
+          summary: "High client error rate (4xx)"
+          description: "4xx error rate is {{ $value | humanizePercentage }} (threshold: 10%)"
+          runbook_url: "https://docs.jobnaut.com/runbooks/client-errors"
+
+  # Cache Performance Alerts
+  - name: cache_performance
+    interval: 30s
+    rules:
+      - alert: LowCacheHitRate
+        expr: |
+          sum(rate(jobnaut_cache_hits_total[5m]))
+          / (sum(rate(jobnaut_cache_hits_total[5m])) + sum(rate(jobnaut_cache_misses_total[5m]))) < 0.8
+        for: 10m
+        labels:
+          severity: warning
+          component: cache
+        annotations:
+          summary: "Low cache hit rate"
+          description: "Cache hit rate is {{ $value | humanizePercentage }} (threshold: 80%)"
+          runbook_url: "https://docs.jobnaut.com/runbooks/cache-performance"
+
+      - alert: CriticalCacheHitRate
+        expr: |
+          sum(rate(jobnaut_cache_hits_total[5m]))
+          / (sum(rate(jobnaut_cache_hits_total[5m])) + sum(rate(jobnaut_cache_misses_total[5m]))) < 0.5
+        for: 5m
+        labels:
+          severity: critical
+          component: cache
+        annotations:
+          summary: "Critical: Very low cache hit rate"
+          description: "Cache hit rate is {{ $value | humanizePercentage }} (threshold: 50%)"
+          runbook_url: "https://docs.jobnaut.com/runbooks/cache-performance"
+
+  # Database Performance Alerts
+  - name: database_performance
+    interval: 30s
+    rules:
+      - alert: SlowDatabaseQueries
+        expr: |
+          histogram_quantile(0.95,
+            sum(rate(jobnaut_db_query_duration_seconds_bucket[5m])) by (le, operation)
+          ) > 1
+        for: 5m
+        labels:
+          severity: warning
+          component: database
+        annotations:
+          summary: "Slow database queries detected"
+          description: "P95 query time for {{ $labels.operation }} is {{ $value }}s (threshold: 1s)"
+          runbook_url: "https://docs.jobnaut.com/runbooks/slow-queries"
+
+      - alert: DatabaseErrors
+        expr: rate(jobnaut_db_query_errors_total[5m]) > 0.1
+        for: 3m
+        labels:
+          severity: critical
+          component: database
+        annotations:
+          summary: "Database errors detected"
+          description: "Database error rate is {{ $value }} errors/sec for {{ $labels.operation }}"
+          runbook_url: "https://docs.jobnaut.com/runbooks/database-errors"
+
+  # Infrastructure Alerts
+  - name: infrastructure
+    interval: 30s
+    rules:
+      - alert: HighMemoryUsage
+        expr: |
+          (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 85
+        for: 5m
+        labels:
+          severity: warning
+          component: infrastructure
+        annotations:
+          summary: "High memory usage"
+          description: "Memory usage is {{ $value }}% (threshold: 85%)"
+          runbook_url: "https://docs.jobnaut.com/runbooks/high-memory"
+
+      - alert: CriticalMemoryUsage
+        expr: |
+          (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 95
+        for: 2m
+        labels:
+          severity: critical
+          component: infrastructure
+        annotations:
+          summary: "Critical: Memory usage critical"
+          description: "Memory usage is {{ $value }}% (threshold: 95%)"
+          runbook_url: "https://docs.jobnaut.com/runbooks/high-memory"
+
+      - alert: HighCPUUsage
+        expr: |
+          100 - (avg by (instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+        for: 10m
+        labels:
+          severity: warning
+          component: infrastructure
+        annotations:
+          summary: "High CPU usage"
+          description: "CPU usage is {{ $value }}% (threshold: 80%)"
+          runbook_url: "https://docs.jobnaut.com/runbooks/high-cpu"
+
+      - alert: CriticalCPUUsage
+        expr: |
+          100 - (avg by (instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 95
+        for: 3m
+        labels:
+          severity: critical
+          component: infrastructure
+        annotations:
+          summary: "Critical: CPU usage critical"
+          description: "CPU usage is {{ $value }}% (threshold: 95%)"
+          runbook_url: "https://docs.jobnaut.com/runbooks/high-cpu"
+
+      - alert: HighDiskUsage
+        expr: |
+          100 - ((node_filesystem_avail_bytes{mountpoint="/",fstype!="rootfs"}
+          / node_filesystem_size_bytes{mountpoint="/",fstype!="rootfs"}) * 100) > 85
+        for: 5m
+        labels:
+          severity: warning
+          component: infrastructure
+        annotations:
+          summary: "High disk usage"
+          description: "Disk usage is {{ $value }}% (threshold: 85%)"
+          runbook_url: "https://docs.jobnaut.com/runbooks/high-disk"
+
+      - alert: CriticalDiskUsage
+        expr: |
+          100 - ((node_filesystem_avail_bytes{mountpoint="/",fstype!="rootfs"}
+          / node_filesystem_size_bytes{mountpoint="/",fstype!="rootfs"}) * 100) > 95
+        for: 2m
+        labels:
+          severity: critical
+          component: infrastructure
+        annotations:
+          summary: "Critical: Disk usage critical"
+          description: "Disk usage is {{ $value }}% (threshold: 95%)"
+          runbook_url: "https://docs.jobnaut.com/runbooks/high-disk"
+
+  # Service Health Alerts
+  - name: service_health
+    interval: 30s
+    rules:
+      - alert: ServiceDown
+        expr: up{job="jobnaut-api"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          component: api
+        annotations:
+          summary: "Service is down"
+          description: "{{ $labels.job }} has been down for more than 1 minute"
+          runbook_url: "https://docs.jobnaut.com/runbooks/service-down"
+
+      - alert: HealthCheckFailing
+        expr: |
+          rate(jobnaut_http_requests_total{route="/health", status_code!~"2.."}[5m]) > 0
+        for: 2m
+        labels:
+          severity: critical
+          component: api
+        annotations:
+          summary: "Health check failing"
+          description: "Health check endpoint is returning errors"
+          runbook_url: "https://docs.jobnaut.com/runbooks/health-check"
+
+      - alert: ContainerRestarts
+        expr: |
+          rate(kube_pod_container_status_restarts_total[15m]) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+          component: infrastructure
+        annotations:
+          summary: "Container restarting frequently"
+          description: "Container {{ $labels.container }} is restarting frequently"
+          runbook_url: "https://docs.jobnaut.com/runbooks/container-restarts"
+
+  # AI Service Alerts
+  - name: ai_service
+    interval: 30s
+    rules:
+      - alert: HighAIErrorRate
+        expr: |
+          sum(rate(jobnaut_ai_requests_total{status!="success"}[5m]))
+          / sum(rate(jobnaut_ai_requests_total[5m])) > 0.05
+        for: 5m
+        labels:
+          severity: warning
+          component: ai
+        annotations:
+          summary: "High AI service error rate"
+          description: "AI error rate is {{ $value | humanizePercentage }} (threshold: 5%)"
+          runbook_url: "https://docs.jobnaut.com/runbooks/ai-errors"
+
+      - alert: SlowAIResponses
+        expr: |
+          histogram_quantile(0.95,
+            sum(rate(jobnaut_ai_request_duration_seconds_bucket[5m])) by (le, provider)
+          ) > 10
+        for: 5m
+        labels:
+          severity: warning
+          component: ai
+        annotations:
+          summary: "Slow AI service responses"
+          description: "P95 AI response time for {{ $labels.provider }} is {{ $value }}s (threshold: 10s)"
+          runbook_url: "https://docs.jobnaut.com/runbooks/slow-ai"
+
+  # Business Metrics Alerts
+  - name: business_metrics
+    interval: 1m
+    rules:
+      - alert: NoRecentUserActivity
+        expr: |
+          increase(jobnaut_user_registrations_total[1h]) == 0
+          and increase(jobnaut_job_searches_total[1h]) == 0
+        for: 2h
+        labels:
+          severity: warning
+          component: business
+        annotations:
+          summary: "No recent user activity"
+          description: "No user registrations or job searches in the last 2 hours"
+          runbook_url: "https://docs.jobnaut.com/runbooks/no-activity"
+
+      - alert: UnusuallyLowSearches
+        expr: |
+          rate(jobnaut_job_searches_total[1h]) < 0.5 * rate(jobnaut_job_searches_total[24h] offset 24h)
+        for: 1h
+        labels:
+          severity: warning
+          component: business
+        annotations:
+          summary: "Unusually low search activity"
+          description: "Search rate is 50% below yesterday's rate"
+          runbook_url: "https://docs.jobnaut.com/runbooks/low-searches"
+
+  # Backup and Recovery Alerts
+  - name: backup_recovery
+    interval: 5m
+    rules:
+      - alert: BackupFailed
+        expr: backup_failure_total > 0
+        for: 5m
+        labels:
+          severity: critical
+          component: backup
+        annotations:
+          summary: "Backup failed"
+          description: "Backup for {{ $labels.type }} has failed. Check backup logs immediately."
+          runbook_url: "https://docs.jobnaut.com/runbooks/backup-failed"
+
+      - alert: BackupStale
+        expr: backup_age_seconds > 86400
+        for: 1h
+        labels:
+          severity: warning
+          component: backup
+        annotations:
+          summary: "Backup is stale"
+          description: "Last backup for {{ $labels.type }} is {{ $value | humanizeDuration }} old (threshold: 24 hours)"
+          runbook_url: "https://docs.jobnaut.com/runbooks/backup-stale"
+
+      - alert: BackupCriticallyStale
+        expr: backup_age_seconds > 172800
+        for: 30m
+        labels:
+          severity: critical
+          component: backup
+        annotations:
+          summary: "Critical: Backup critically stale"
+          description: "Last backup for {{ $labels.type }} is {{ $value | humanizeDuration }} old (threshold: 48 hours)"
+          runbook_url: "https://docs.jobnaut.com/runbooks/backup-stale"
+
+      - alert: BackupSizeAnomaly
+        expr: |
+          abs(backup_size_bytes - backup_size_bytes offset 24h)
+          / backup_size_bytes offset 24h > 0.5
+        for: 15m
+        labels:
+          severity: warning
+          component: backup
+        annotations:
+          summary: "Backup size anomaly detected"
+          description: "Backup size for {{ $labels.type }} changed by {{ $value | humanizePercentage }} compared to yesterday"
+          runbook_url: "https://docs.jobnaut.com/runbooks/backup-size-anomaly"
+
+      - alert: BackupDurationHigh
+        expr: backup_duration_seconds > 3600
+        for: 5m
+        labels:
+          severity: warning
+          component: backup
+        annotations:
+          summary: "Backup taking too long"
+          description: "Backup for {{ $labels.type }} took {{ $value | humanizeDuration }} (threshold: 1 hour)"
+          runbook_url: "https://docs.jobnaut.com/runbooks/slow-backup"
+
+      - alert: BackupStorageLow
+        expr: |
+          100 - ((node_filesystem_avail_bytes{mountpoint="/var/backups"}
+          / node_filesystem_size_bytes{mountpoint="/var/backups"}) * 100) > 80
+        for: 10m
+        labels:
+          severity: warning
+          component: backup
+        annotations:
+          summary: "Backup storage space low"
+          description: "Backup storage is {{ $value }}% full (threshold: 80%)"
+          runbook_url: "https://docs.jobnaut.com/runbooks/backup-storage-low"
+
+      - alert: BackupStorageCritical
+        expr: |
+          100 - ((node_filesystem_avail_bytes{mountpoint="/var/backups"}
+          / node_filesystem_size_bytes{mountpoint="/var/backups"}) * 100) > 90
+        for: 5m
+        labels:
+          severity: critical
+          component: backup
+        annotations:
+          summary: "Critical: Backup storage critical"
+          description: "Backup storage is {{ $value }}% full (threshold: 90%)"
+          runbook_url: "https://docs.jobnaut.com/runbooks/backup-storage-low"
+
+      - alert: NoRecentBackup
+        expr: absent(backup_success_total)
+        for: 30m
+        labels:
+          severity: critical
+          component: backup
+        annotations:
+          summary: "No backup metrics found"
+          description: "Backup metrics have not been reported. Backup system may be down."
+          runbook_url: "https://docs.jobnaut.com/runbooks/backup-metrics-missing"
+
+      - alert: CloudUploadFailed
+        expr: backup_cloud_upload_failures_total > 3
+        for: 15m
+        labels:
+          severity: warning
+          component: backup
+        annotations:
+          summary: "Cloud backup upload failures"
+          description: "Cloud upload for {{ $labels.type }} has failed {{ $value }} times"
+          runbook_url: "https://docs.jobnaut.com/runbooks/cloud-upload-failed"

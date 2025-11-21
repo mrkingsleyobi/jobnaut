@@ -102,6 +102,87 @@ async function checkExternalServices() {
 }
 
 /**
+ * Check backup status
+ */
+async function checkBackupStatus() {
+  const fs = require('fs').promises;
+  const path = require('path');
+
+  try {
+    const backupDir = process.env.BACKUP_DIR || '/var/backups/jobnaut/postgresql';
+
+    // Check if backup directory exists
+    try {
+      await fs.access(backupDir);
+    } catch {
+      return {
+        status: 'unknown',
+        message: 'Backup directory not accessible',
+        path: backupDir,
+      };
+    }
+
+    // Find most recent backup
+    const files = await fs.readdir(backupDir);
+    const backupFiles = files.filter((f) => f.startsWith('jobnaut_db_') && f.endsWith('.sql.gz'));
+
+    if (backupFiles.length === 0) {
+      return {
+        status: 'warning',
+        message: 'No backups found',
+        backupCount: 0,
+      };
+    }
+
+    // Get stats for most recent backup
+    const backupStats = await Promise.all(
+      backupFiles.map(async (file) => {
+        const filePath = path.join(backupDir, file);
+        const stats = await fs.stat(filePath);
+        return { file, mtime: stats.mtime, size: stats.size };
+      })
+    );
+
+    // Sort by modification time (newest first)
+    backupStats.sort((a, b) => b.mtime - a.mtime);
+    const mostRecent = backupStats[0];
+
+    // Calculate age in hours
+    const ageMs = Date.now() - mostRecent.mtime.getTime();
+    const ageHours = Math.floor(ageMs / (1000 * 60 * 60));
+
+    // Determine status based on backup age
+    let status = 'healthy';
+    let message = 'Backups are up to date';
+
+    if (ageHours > 48) {
+      status = 'unhealthy';
+      message = 'Backup is too old';
+    } else if (ageHours > 24) {
+      status = 'warning';
+      message = 'Backup is older than 24 hours';
+    }
+
+    return {
+      status,
+      message,
+      lastBackup: mostRecent.mtime.toISOString(),
+      lastBackupFile: mostRecent.file,
+      backupAge: `${ageHours} hours`,
+      backupSize: `${Math.round(mostRecent.size / 1024 / 1024)} MB`,
+      backupCount: backupFiles.length,
+    };
+  } catch (error) {
+    logger.error('Backup status check failed', { error: error.message });
+    return {
+      status: 'unknown',
+      message: 'Backup check failed',
+      error: error.message,
+    };
+  }
+}
+
+/**
  * Calculate overall health status
  */
 function calculateOverallStatus(checks) {
@@ -176,21 +257,49 @@ router.get('/ready', async (req, res) => {
 });
 
 /**
+ * Backup status endpoint
+ * Provides backup health information
+ */
+router.get('/backup', async (req, res) => {
+  try {
+    const backupStatus = await checkBackupStatus();
+
+    const isHealthy = backupStatus.status === 'healthy';
+    const statusCode = isHealthy ? 200 : backupStatus.status === 'warning' ? 200 : 503;
+
+    res.status(statusCode).json({
+      status: backupStatus.status,
+      timestamp: new Date().toISOString(),
+      backup: backupStatus,
+    });
+  } catch (error) {
+    logger.error('Backup health check failed', { error: error.message });
+    res.status(503).json({
+      status: 'unhealthy',
+      timestamp: new Date().toISOString(),
+      error: error.message,
+    });
+  }
+});
+
+/**
  * Detailed health check endpoint
  * Provides comprehensive health information
  */
 router.get('/detailed', async (req, res) => {
   try {
-    const [database, redis, externalServices] = await Promise.all([
+    const [database, redis, externalServices, backup] = await Promise.all([
       checkDatabase(),
       checkRedis(),
       checkExternalServices(),
+      checkBackupStatus(),
     ]);
 
     const checks = {
       database,
       redis,
       externalServices,
+      backup,
     };
 
     const overallStatus = calculateOverallStatus(checks);

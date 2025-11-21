@@ -12,10 +12,13 @@ const PORT = envConfig.getPort();
 // Initialize Sentry (must be first)
 initSentry(app);
 
+// Performance optimization middleware
+const { requestTimingMiddleware, startMemoryTracking } = require('./utils/performance');
+const { cacheMiddleware } = require('./middleware/cacheMiddleware');
+
 // Security middleware
 const cors = require('cors');
 const helmet = require('helmet');
-const rateLimit = require('express-rate-limit');
 
 // Add security headers
 app.use(
@@ -67,24 +70,37 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 
-// General API rate limiting
-const apiLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
-  message: 'Too many requests from this IP, please try again later.',
-});
+// Add compression (install with: npm install compression)
+// Note: Uncomment after installing compression package
+// const compression = require('compression');
+// app.use(compression({
+//   level: 6,
+//   threshold: 1024,
+// }));
 
-// Authentication rate limiting
-const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // limit each IP to 5 requests per windowMs
-  message: 'Too many authentication attempts, please try again later.',
-  skipSuccessfulRequests: true,
-});
+// Performance monitoring (should be early in middleware stack)
+app.use(requestTimingMiddleware);
+
+// Response caching with ETag support
+app.use(cacheMiddleware({ etag: true, lastModified: true }));
+
+// Rate limiting with tiered limits
+const {
+  apiLimiter,
+  authLimiter,
+  searchLimiter,
+  chatLimiter,
+  addRateLimitHeaders
+} = require('./middleware/rateLimiter');
+
+// Add rate limit headers
+app.use(addRateLimitHeaders);
 
 // Apply rate limiting
 app.use('/api/', apiLimiter);
 app.use('/auth/', authLimiter);
+app.use('/api/v1/jobs/search', searchLimiter);
+app.use('/api/v1/chat', chatLimiter);
 
 // Add request size limits and protection
 app.use(
@@ -166,6 +182,30 @@ app.use((err, req, res, next) => {
 // 404 handler
 app.use((req, res) => {
   res.status(404).json({ error: 'Not found' });
+});
+
+// Start memory tracking
+if (process.env.NODE_ENV === 'production') {
+  startMemoryTracking(60000); // Track every minute
+}
+
+// Performance monitoring endpoint
+const { getPerformanceReport, getSlowRequests, checkPerformanceHealth } = require('./utils/performance');
+const { getQueryStats } = require('./utils/queryOptimizer');
+
+app.get('/api/performance', (req, res) => {
+  const perfReport = getPerformanceReport();
+  const queryStats = getQueryStats();
+  const slowRequests = getSlowRequests(5);
+  const health = checkPerformanceHealth();
+
+  res.json({
+    timestamp: new Date().toISOString(),
+    performance: perfReport,
+    database: queryStats,
+    slowRequests,
+    health,
+  });
 });
 
 module.exports = app;

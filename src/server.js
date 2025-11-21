@@ -6,6 +6,10 @@
 // Load environment variables first
 require('dotenv').config();
 
+// Import and validate environment configuration
+// This MUST happen before any other imports that depend on env vars
+const envConfig = require('../config/env');
+
 // Import required modules
 const express = require('express');
 const cors = require('cors');
@@ -13,9 +17,8 @@ const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const { ClerkExpressRequireAuth } = require('@clerk/clerk-sdk-node');
 
-// Import application and configuration
+// Import application
 const app = require('./index');
-const envConfig = require('../config/env');
 
 // Import Winston logger
 const winston = require('winston');
@@ -231,14 +234,27 @@ process.on('SIGINT', () => {
 
 // Start server only when this file is run directly
 if (require.main === module) {
+  // Log configuration summary on startup
+  const configSummary = envConfig.getConfigSummary();
+  logger.info('Application configuration loaded and validated', configSummary);
+
+  // Pretty print config summary to console in development
+  if (envConfig.isDevelopment()) {
+    console.log('\n=== JobNaut Configuration ===');
+    console.log(JSON.stringify(configSummary, null, 2));
+    console.log('==============================\n');
+  }
+
   app.listen(PORT, () => {
     logger.info(`JobNaut API server running on port ${PORT}`, {
       port: PORT,
-      environment: process.env.NODE_ENV || 'development',
+      environment: envConfig.NODE_ENV,
     });
-    console.log(`JobNaut API server running on port ${PORT}`);
-    console.log(`Health check: http://localhost:${PORT}/health`);
-    console.log(`tRPC endpoint: http://localhost:${PORT}/trpc`);
+    console.log(`\n✓ JobNaut API server running on port ${PORT}`);
+    console.log(`✓ Environment: ${envConfig.NODE_ENV}`);
+    console.log(`✓ Health check: http://localhost:${PORT}/health`);
+    console.log(`✓ tRPC endpoint: http://localhost:${PORT}/trpc`);
+    console.log(`✓ Metrics: http://localhost:${PORT}/metrics\n`);
   });
 }
 

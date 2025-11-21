@@ -4,6 +4,7 @@ Complete guide to configuring JobNaut through environment variables.
 
 ## Table of Contents
 
+- [Environment Validation](#environment-validation)
 - [Required Variables](#required-variables)
 - [Optional Variables](#optional-variables)
 - [AI Configuration](#ai-configuration)
@@ -13,6 +14,81 @@ Complete guide to configuring JobNaut through environment variables.
 - [Application Configuration](#application-configuration)
 - [Environment-Specific Configurations](#environment-specific-configurations)
 - [Example Configurations](#example-configurations)
+- [Validation and Error Messages](#validation-and-error-messages)
+
+## Environment Validation
+
+JobNaut uses **[envalid](https://github.com/af/envalid)** for comprehensive environment variable validation. All variables are validated on application startup with:
+
+### Validation Features
+
+- **Type Checking**: Ensures variables are the correct type (string, number, boolean, URL, email)
+- **Required vs Optional**: Enforces required variables and provides defaults for optional ones
+- **Default Values**: Environment-specific defaults for development, test, and production
+- **Custom Validators**: Special validation for encryption keys (min 32 chars), log levels, AI providers
+- **Conditional Requirements**: Validates dependencies (e.g., OpenAI API key required when AI_PROVIDER=openai)
+- **Production Strictness**: Extra validation in production (secure passwords, proper URLs, etc.)
+- **Fail Fast**: Application exits immediately if validation fails in production
+- **Clear Error Messages**: Detailed error messages explain what's wrong and how to fix it
+
+### How It Works
+
+```javascript
+// config/env.js validates on import
+const envConfig = require('../config/env');
+
+// Access validated variables
+console.log(envConfig.PORT);           // Always a number
+console.log(envConfig.DATABASE_URL);   // Always a valid URL
+console.log(envConfig.AI_PROVIDER);    // Always 'openai', 'anthropic', or 'mock'
+
+// Convenience methods
+if (envConfig.isProduction()) {
+  // Production-specific logic
+}
+```
+
+### Startup Validation
+
+When the server starts, you'll see:
+
+```bash
+=== JobNaut Configuration ===
+{
+  "environment": "development",
+  "port": 3000,
+  "database": "***CONFIGURED***",
+  "redis": "redis://localhost:6379",
+  "auth": {
+    "clerk": {
+      "publishable": "***SET***",
+      "secret": "***SET***"
+    }
+  },
+  "ai": {
+    "provider": "mock",
+    "openai": {
+      "configured": false,
+      "model": "gpt-4o-mini"
+    }
+  }
+}
+==============================
+```
+
+### Validation Errors
+
+If validation fails, you'll see clear error messages:
+
+```bash
+❌ Environment validation failed:
+
+  - OPENAI_API_KEY is required when AI_PROVIDER=openai
+  - ENCRYPTION_KEY must be set to a secure value in production
+  - REDIS_URL must be configured for production (not localhost)
+
+Please fix the above errors and restart the application.
+```
 
 ## Required Variables
 
@@ -679,24 +755,33 @@ For production, use:
 
 ### 5. Validate Environment Variables
 
-Create a validation script:
+JobNaut automatically validates all environment variables on startup using **envalid**. No manual validation needed!
+
+The validation happens in `/config/env.js` and includes:
+
+- Type validation (string, number, boolean, URL)
+- Required vs optional checks
+- Custom validators for encryption keys, log levels, etc.
+- Conditional requirements (e.g., API keys when provider is selected)
+- Production-specific strictness
+- Clear error messages with suggestions
+
+To test validation, try running with invalid values:
+
+```bash
+# This will fail validation
+AI_PROVIDER=invalid npm start
+
+# Error: AI provider must be one of: openai, anthropic, mock
+```
+
+You can also check the validation logic in `/config/env.js`:
 
 ```javascript
-// scripts/validate-env.js
-const required = [
-  'NODE_ENV',
-  'PORT',
-  'DATABASE_URL',
-  'CLERK_SECRET_KEY',
-  'CLERK_PUBLISHABLE_KEY'
-];
+const envConfig = require('./config/env');
 
-const missing = required.filter(key => !process.env[key]);
-
-if (missing.length > 0) {
-  console.error('Missing required environment variables:', missing);
-  process.exit(1);
-}
+// Get sanitized configuration summary
+console.log(envConfig.getConfigSummary());
 ```
 
 ## Troubleshooting
@@ -747,8 +832,117 @@ curl https://api.openai.com/v1/models \
 - [Anthropic API Reference](https://docs.anthropic.com/claude/reference)
 - [Redis Documentation](https://redis.io/documentation)
 
+## Validation and Error Messages
+
+### Common Validation Errors
+
+#### 1. Missing Required Variables
+
+```bash
+Error: The following environment variables are required but were not set:
+  - DATABASE_URL
+  - CLERK_SECRET_KEY
+```
+
+**Solution**: Add the missing variables to your `.env` file.
+
+#### 2. Invalid Type
+
+```bash
+Error: Invalid PORT (expected number, got string)
+```
+
+**Solution**: Ensure PORT is a valid number: `PORT=3000`
+
+#### 3. Invalid URL Format
+
+```bash
+Error: Invalid DATABASE_URL (expected valid URL)
+```
+
+**Solution**: Check URL format: `postgresql://user:pass@host:5432/db`
+
+#### 4. Invalid Choice
+
+```bash
+Error: AI provider must be one of: openai, anthropic, mock
+```
+
+**Solution**: Use a valid AI provider: `AI_PROVIDER=openai`
+
+#### 5. Conditional Requirements
+
+```bash
+❌ Environment validation failed:
+  - OPENAI_API_KEY is required when AI_PROVIDER=openai
+```
+
+**Solution**: Either set `OPENAI_API_KEY` or change `AI_PROVIDER` to `mock`
+
+#### 6. Production Security
+
+```bash
+❌ Environment validation failed:
+  - ENCRYPTION_KEY must be set to a secure value in production
+  - GRAFANA_ADMIN_PASSWORD must be changed from default in production
+```
+
+**Solution**: Set secure values for production:
+
+```bash
+ENCRYPTION_KEY=$(openssl rand -base64 32)
+GRAFANA_ADMIN_PASSWORD=$(openssl rand -base64 24)
+```
+
+### Validation Configuration
+
+The validation logic is in `/config/env.js`. Key features:
+
+1. **Type Validators**: `str()`, `num()`, `bool()`, `url()`, `email()`
+2. **Custom Validators**: `logLevel()`, `aiProvider()`, `encryptionKey()`
+3. **Conditional Checks**: `validateConditionalRequirements()`
+4. **Environment-Specific Defaults**: Different defaults for dev/test/prod
+
+### Testing Validation
+
+To test validation locally:
+
+```bash
+# Test missing required variable
+unset DATABASE_URL && npm start
+# Should fail with clear error message
+
+# Test invalid type
+PORT=abc npm start
+# Should fail: expected number
+
+# Test invalid AI provider
+AI_PROVIDER=invalid npm start
+# Should fail: must be openai, anthropic, or mock
+
+# Test conditional requirement
+AI_PROVIDER=openai npm start
+# Should warn: OPENAI_API_KEY required
+```
+
+### Environment Variable Checklist
+
+Before deploying to production, ensure:
+
+- [ ] All required variables are set
+- [ ] DATABASE_URL points to production database (not localhost)
+- [ ] REDIS_URL points to production Redis (not localhost)
+- [ ] CLERK_SECRET_KEY is production key (starts with `sk_live_`)
+- [ ] ENCRYPTION_KEY is secure (32+ characters, cryptographically random)
+- [ ] GRAFANA_ADMIN_PASSWORD is changed from default
+- [ ] SENTRY_DSN is set for error tracking
+- [ ] AI provider API keys are set if not using mock
+- [ ] FRONTEND_URL and API_BASE_URL are production URLs
+- [ ] LOG_LEVEL is set to `info` or `warn` (not `debug`)
+
 ## Support
 
 For configuration issues:
 - GitHub Issues: https://github.com/mrkingsleyobi/jobnaut/issues
 - Documentation: https://github.com/mrkingsleyobi/jobnaut/docs
+- Envalid Documentation: https://github.com/af/envalid
