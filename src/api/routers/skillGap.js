@@ -13,7 +13,9 @@ const getSkillGapAnalysisInput = z.object({
 
 const getMultipleSkillGapAnalysesInput = z.object({
   userId: z.string().min(1, 'User ID is required'),
-  jobIds: z.array(z.number().positive('Job ID must be a positive number')).min(1, 'At least one job ID is required'),
+  jobIds: z
+    .array(z.number().positive('Job ID must be a positive number'))
+    .min(1, 'At least one job ID is required'),
 });
 
 const getOverallSkillGapAnalysisInput = z.object({
@@ -24,25 +26,20 @@ const skillGapRouter = router({
   /**
    * Get skill gap analysis for a specific job
    */
-  getAnalysisForJob: protectedProcedure
-    .input(getSkillGapAnalysisInput)
-    .query(async ({ input }) => {
-      try {
-        // In a real implementation, we would verify the user has access to this analysis
-        // For now, we'll just check that the user ID matches the authenticated user
-        // (this check would be done in the protectedProcedure middleware)
+  getAnalysisForJob: protectedProcedure.input(getSkillGapAnalysisInput).query(async ({ input }) => {
+    try {
+      // In a real implementation, we would verify the user has access to this analysis
+      // For now, we'll just check that the user ID matches the authenticated user
+      // (this check would be done in the protectedProcedure middleware)
 
-        const result = await skillGapService.getSkillGapAnalysisForJob(
-          input.userId,
-          input.jobId
-        );
+      const result = await skillGapService.getSkillGapAnalysisForJob(input.userId, input.jobId);
 
-        return result;
-      } catch (error) {
-        console.error('Error in getAnalysisForJob:', error.message);
-        throw new Error(`Failed to get skill gap analysis: ${error.message}`);
-      }
-    }),
+      return result;
+    } catch (error) {
+      console.error('Error in getAnalysisForJob:', error.message);
+      throw new Error(`Failed to get skill gap analysis: ${error.message}`);
+    }
+  }),
 
   /**
    * Get skill gap analyses for multiple jobs
@@ -51,10 +48,7 @@ const skillGapRouter = router({
     .input(getMultipleSkillGapAnalysesInput)
     .query(async ({ input }) => {
       try {
-        const result = await skillGapService.getSkillGapAnalysisForJobs(
-          input.userId,
-          input.jobIds
-        );
+        const result = await skillGapService.getSkillGapAnalysisForJobs(input.userId, input.jobIds);
 
         return result;
       } catch (error) {

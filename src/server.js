@@ -33,41 +33,42 @@ const logger = winston.createLogger({
     // Write all logs with level `error` and below to `error.log`
     new winston.transports.File({ filename: './logs/error.log', level: 'error' }),
     // Write all logs to `combined.log`
-    new winston.transports.File({ filename: './logs/combined.log' })
-  ]
+    new winston.transports.File({ filename: './logs/combined.log' }),
+  ],
 });
 
 // If we're not in production, log to the console as well
 if (envConfig.isDevelopment()) {
-  logger.add(new winston.transports.Console({
-    format: winston.format.combine(
-      winston.format.colorize(),
-      winston.format.simple()
-    )
-  }));
+  logger.add(
+    new winston.transports.Console({
+      format: winston.format.combine(winston.format.colorize(), winston.format.simple()),
+    })
+  );
 }
 
 // Enhanced security middleware
-app.use(helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      styleSrc: ["'self'", "'unsafe-inline'"],
-      scriptSrc: ["'self'"],
-      imgSrc: ["'self'", "data:", "https:"],
-      connectSrc: ["'self'", "https://*.clerk.accounts.dev"],
-      fontSrc: ["'self'", "https:", "data:"],
-      objectSrc: ["'none'"],
-      mediaSrc: ["'self'"],
-      frameSrc: ["'none'"]
-    }
-  },
-  hsts: {
-    maxAge: 31536000,
-    includeSubDomains: true,
-    preload: true
-  }
-}));
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        styleSrc: ["'self'", "'unsafe-inline'"],
+        scriptSrc: ["'self'"],
+        imgSrc: ["'self'", 'data:', 'https:'],
+        connectSrc: ["'self'", 'https://*.clerk.accounts.dev'],
+        fontSrc: ["'self'", 'https:', 'data:'],
+        objectSrc: ["'none'"],
+        mediaSrc: ["'self'"],
+        frameSrc: ["'none'"],
+      },
+    },
+    hsts: {
+      maxAge: 31536000,
+      includeSubDomains: true,
+      preload: true,
+    },
+  })
+);
 
 // Configure CORS with environment-based settings
 const corsOptions = {
@@ -81,12 +82,9 @@ const corsOptions = {
           'http://localhost:3000',
           'http://localhost:3001',
           'http://127.0.0.1:3000',
-          'http://127.0.0.1:3001'
+          'http://127.0.0.1:3001',
         ]
-      : [
-          'https://yourdomain.com',
-          'https://www.yourdomain.com'
-        ];
+      : ['https://yourdomain.com', 'https://www.yourdomain.com'];
 
     if (allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
@@ -95,7 +93,7 @@ const corsOptions = {
     }
   },
   credentials: true,
-  optionsSuccessStatus: 200
+  optionsSuccessStatus: 200,
 };
 
 app.use(cors(corsOptions));
@@ -106,7 +104,7 @@ const apiLimiter = rateLimit({
   max: envConfig.isDevelopment() ? 500 : 100, // Higher limit for development
   message: {
     error: 'Too many requests',
-    message: 'Too many requests from this IP, please try again later.'
+    message: 'Too many requests from this IP, please try again later.',
   },
   standardHeaders: true,
   legacyHeaders: false,
@@ -118,7 +116,7 @@ const authLimiter = rateLimit({
   max: 5, // limit each IP to 5 requests per windowMs
   message: {
     error: 'Too many authentication attempts',
-    message: 'Too many authentication attempts, please try again later.'
+    message: 'Too many authentication attempts, please try again later.',
   },
   skipSuccessfulRequests: true,
   standardHeaders: true,
@@ -139,7 +137,7 @@ app.use((req, res, next) => {
     method: req.method,
     url: req.url,
     ip: req.ip,
-    userAgent: req.get('User-Agent')
+    userAgent: req.get('User-Agent'),
   });
 
   // Log response
@@ -149,7 +147,7 @@ app.use((req, res, next) => {
       method: req.method,
       url: req.url,
       statusCode: res.statusCode,
-      duration: `${duration}ms`
+      duration: `${duration}ms`,
     });
   });
 
@@ -184,14 +182,14 @@ app.use((err, req, res, next) => {
     stack: err.stack,
     method: req.method,
     url: req.url,
-    ip: req.ip
+    ip: req.ip,
   });
 
   // Handle specific error types
   if (err.type === 'entity.parse.failed') {
     return res.status(400).json({
       error: 'Bad Request',
-      message: 'Invalid JSON in request body'
+      message: 'Invalid JSON in request body',
     });
   }
 
@@ -199,7 +197,7 @@ app.use((err, req, res, next) => {
   if (err.name === 'UnauthorizedError') {
     return res.status(401).json({
       error: 'Unauthorized',
-      message: 'Authentication required'
+      message: 'Authentication required',
     });
   }
 
@@ -207,16 +205,14 @@ app.use((err, req, res, next) => {
   if (err.name === 'TooManyRequestsError') {
     return res.status(429).json({
       error: 'Too Many Requests',
-      message: 'Rate limit exceeded'
+      message: 'Rate limit exceeded',
     });
   }
 
   // Generic error response
   res.status(500).json({
     error: 'Internal Server Error',
-    message: envConfig.isDevelopment()
-      ? err.message
-      : 'An unexpected error occurred'
+    message: envConfig.isDevelopment() ? err.message : 'An unexpected error occurred',
   });
 });
 
@@ -238,7 +234,7 @@ if (require.main === module) {
   app.listen(PORT, () => {
     logger.info(`JobNaut API server running on port ${PORT}`, {
       port: PORT,
-      environment: process.env.NODE_ENV || 'development'
+      environment: process.env.NODE_ENV || 'development',
     });
     console.log(`JobNaut API server running on port ${PORT}`);
     console.log(`Health check: http://localhost:${PORT}/health`);

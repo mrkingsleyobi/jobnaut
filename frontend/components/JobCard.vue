@@ -10,11 +10,7 @@
       <p class="job-description">{{ truncatedDescription }}</p>
 
       <div class="job-skills">
-        <span
-          v-for="skill in displayedSkills"
-          :key="skill"
-          class="skill-tag"
-        >
+        <span v-for="skill in displayedSkills" :key="skill" class="skill-tag">
           {{ skill }}
         </span>
         <span v-if="job.skills.length > 3" class="more-skills">
@@ -26,11 +22,7 @@
     </div>
 
     <div class="job-actions">
-      <button
-        @click.stop="$emit('save', job.id)"
-        class="save-button"
-        :class="{ saved: isSaved }"
-      >
+      <button @click.stop="$emit('save', job.id)" class="save-button" :class="{ saved: isSaved }">
         {{ isSaved ? 'Saved' : 'Save' }}
       </button>
     </div>
@@ -38,40 +30,40 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed } from 'vue';
 
 // Props
 const props = defineProps({
   job: {
     type: Object,
-    required: true
+    required: true,
   },
   isSaved: {
     type: Boolean,
-    default: false
-  }
-})
+    default: false,
+  },
+});
 
 // Emits
-const emit = defineEmits(['view-details', 'save'])
+const emit = defineEmits(['view-details', 'save']);
 
 // Computed properties
 const truncatedDescription = computed(() => {
-  if (!props.job.description) return ''
+  if (!props.job.description) return '';
   return props.job.description.length > 100
     ? props.job.description.substring(0, 100) + '...'
-    : props.job.description
-})
+    : props.job.description;
+});
 
 const displayedSkills = computed(() => {
-  return props.job.skills ? props.job.skills.slice(0, 3) : []
-})
+  return props.job.skills ? props.job.skills.slice(0, 3) : [];
+});
 
 // Methods
 const formatDate = (dateString) => {
-  if (!dateString) return ''
-  return new Date(dateString).toLocaleDateString()
-}
+  if (!dateString) return '';
+  return new Date(dateString).toLocaleDateString();
+};
 </script>
 
 <style scoped>
@@ -81,7 +73,9 @@ const formatDate = (dateString) => {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   padding: 1.5rem;
   cursor: pointer;
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition:
+    transform 0.2s,
+    box-shadow 0.2s;
   border: 1px solid #e1e5e9;
 }
 

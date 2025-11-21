@@ -23,21 +23,11 @@
     </div>
 
     <div v-if="jobs.length > 0 && totalPages > 1" class="pagination">
-      <button
-        :disabled="currentPage === 1"
-        @click="previousPage"
-        class="pagination-button"
-      >
+      <button :disabled="currentPage === 1" @click="previousPage" class="pagination-button">
         Previous
       </button>
-      <span class="page-info">
-        Page {{ currentPage }} of {{ totalPages }}
-      </span>
-      <button
-        :disabled="currentPage === totalPages"
-        @click="nextPage"
-        class="pagination-button"
-      >
+      <span class="page-info"> Page {{ currentPage }} of {{ totalPages }} </span>
+      <button :disabled="currentPage === totalPages" @click="nextPage" class="pagination-button">
         Next
       </button>
     </div>
@@ -45,38 +35,38 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
-import JobSearch from '../../components/JobSearch.vue'
-import JobCard from '../../components/JobCard.vue'
-import searchService from '../../services/searchService'
-import trpc from '../../src/api/trpcClient'
+import { ref, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
+import JobSearch from '../../components/JobSearch.vue';
+import JobCard from '../../components/JobCard.vue';
+import searchService from '../../services/searchService';
+import trpc from '../../src/api/trpcClient';
 
 // Router
-const router = useRouter()
+const router = useRouter();
 
 // Reactive state
-const jobs = ref([])
-const loading = ref(false)
-const savedJobs = ref(new Set())
-const currentPage = ref(1)
-const totalPages = ref(1)
+const jobs = ref([]);
+const loading = ref(false);
+const savedJobs = ref(new Set());
+const currentPage = ref(1);
+const totalPages = ref(1);
 const searchParams = ref({
   query: '',
   location: '',
   experience: '',
-  jobType: ''
-})
+  jobType: '',
+});
 
 // Reactive state for search results
 const searchResults = ref({
   jobs: [],
-  totalCount: 0
-})
+  totalCount: 0,
+});
 
 // Methods
 const loadJobs = async () => {
-  loading.value = true
+  loading.value = true;
 
   try {
     // Prepare search parameters for tRPC
@@ -85,71 +75,71 @@ const loadJobs = async () => {
       location: searchParams.value.location || undefined,
       experienceLevel: searchParams.value.experience || undefined,
       limit: 10,
-      offset: (currentPage.value - 1) * 10
-    }
+      offset: (currentPage.value - 1) * 10,
+    };
 
     // Remove undefined properties
-    Object.keys(searchInput).forEach(key =>
-      searchInput[key] === undefined && delete searchInput[key]
-    )
+    Object.keys(searchInput).forEach(
+      (key) => searchInput[key] === undefined && delete searchInput[key]
+    );
 
     // Call tRPC jobs search endpoint
-    const result = await trpc.jobs.search.query(searchInput)
+    const result = await trpc.jobs.search.query(searchInput);
 
-    searchResults.value = result
-    jobs.value = result.jobs
-    totalPages.value = Math.ceil(result.totalCount / 10)
-    loading.value = false
+    searchResults.value = result;
+    jobs.value = result.jobs;
+    totalPages.value = Math.ceil(result.totalCount / 10);
+    loading.value = false;
   } catch (error) {
-    console.error('Error loading jobs:', error)
+    console.error('Error loading jobs:', error);
     // Reset to empty state on error
-    jobs.value = []
-    searchResults.value = { jobs: [], totalCount: 0 }
-    totalPages.value = 0
-    loading.value = false
+    jobs.value = [];
+    searchResults.value = { jobs: [], totalCount: 0 };
+    totalPages.value = 0;
+    loading.value = false;
   }
-}
+};
 
 const handleSearch = (params) => {
-  searchParams.value = params
-  currentPage.value = 1
-  loadJobs()
-}
+  searchParams.value = params;
+  currentPage.value = 1;
+  loadJobs();
+};
 
 const viewJobDetails = (jobId) => {
-  router.push(`/jobs/${jobId}`)
-}
+  router.push(`/jobs/${jobId}`);
+};
 
 const toggleSaveJob = (jobId) => {
   if (savedJobs.value.has(jobId)) {
-    savedJobs.value.delete(jobId)
+    savedJobs.value.delete(jobId);
   } else {
-    savedJobs.value.add(jobId)
+    savedJobs.value.add(jobId);
   }
-}
+};
 
 const isJobSaved = (jobId) => {
-  return savedJobs.value.has(jobId)
-}
+  return savedJobs.value.has(jobId);
+};
 
 const previousPage = () => {
   if (currentPage.value > 1) {
-    currentPage.value--
-    loadJobs()
+    currentPage.value--;
+    loadJobs();
   }
-}
+};
 
 const nextPage = () => {
   if (currentPage.value < totalPages.value) {
-    currentPage.value++
-    loadJobs()
+    currentPage.value++;
+    loadJobs();
   }
-}
+};
 
 // Load jobs on component mount
 onMounted(() => {
-  loadJobs()
-})
+  loadJobs();
+});
 </script>
 
 <style scoped>

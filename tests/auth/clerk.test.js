@@ -5,8 +5,8 @@
 const mockPrisma = {
   user: {
     findUnique: jest.fn(),
-    create: jest.fn()
-  }
+    create: jest.fn(),
+  },
 };
 
 jest.mock('../../src/db/client', () => mockPrisma);
@@ -16,7 +16,7 @@ jest.mock('../../src/db/testClient', () => mockPrisma);
 jest.mock('../../src/models/user', () => {
   return {
     getUserByClerkId: jest.fn(),
-    createUser: jest.fn()
+    createUser: jest.fn(),
   };
 });
 
@@ -30,33 +30,33 @@ jest.mock('../../src/services/encryption', () => {
         name: userData.name || null,
         location: userData.location || null,
         experienceLevel: userData.experienceLevel || null,
-        skills: userData.skills || null
+        skills: userData.skills || null,
       };
     }),
     decrypt: jest.fn((encryptedData) => {
       // For testing, return the data as-is
       return encryptedData;
-    })
+    }),
   };
 });
 
 // Mock Clerk SDK
 const mockSessionAPI = {
-  verifySessionToken: jest.fn()
+  verifySessionToken: jest.fn(),
 };
 
 const mockUserAPI = {
-  getUser: jest.fn()
+  getUser: jest.fn(),
 };
 
 const mockClerkClient = {
   sessions: mockSessionAPI,
-  users: mockUserAPI
+  users: mockUserAPI,
 };
 
 jest.mock('@clerk/clerk-sdk-node', () => {
   return {
-    createClerkClient: jest.fn(() => mockClerkClient)
+    createClerkClient: jest.fn(() => mockClerkClient),
   };
 });
 
@@ -79,7 +79,7 @@ describe('Clerk Authentication Service', () => {
       emailAddresses: [{ emailAddress: 'test@example.com', primary: true }],
       firstName: 'Test',
       lastName: 'User',
-      imageUrl: 'https://example.com/avatar.jpg'
+      imageUrl: 'https://example.com/avatar.jpg',
     };
 
     // Mock local user data
@@ -92,7 +92,7 @@ describe('Clerk Authentication Service', () => {
       experienceLevel: null,
       skills: null,
       createdAt: new Date(),
-      updatedAt: new Date()
+      updatedAt: new Date(),
     };
 
     // Reset all mock functions
@@ -143,7 +143,7 @@ describe('Clerk Authentication Service', () => {
         name: 'Test User',
         location: undefined,
         experienceLevel: undefined,
-        skills: undefined
+        skills: undefined,
       });
       expect(result).toEqual(mockLocalUser);
     });
@@ -155,7 +155,9 @@ describe('Clerk Authentication Service', () => {
       userService.createUser.mockImplementation(() => Promise.reject(error));
 
       // Act & Assert
-      await expect(clerkAuthService.syncUserWithDatabase(mockClerkUser)).rejects.toThrow('Database error');
+      await expect(clerkAuthService.syncUserWithDatabase(mockClerkUser)).rejects.toThrow(
+        'Database error'
+      );
       expect(userService.getUserByClerkId).toHaveBeenCalledWith('user_123');
       expect(userService.createUser).toHaveBeenCalledWith({
         clerkId: 'user_123',
@@ -163,7 +165,7 @@ describe('Clerk Authentication Service', () => {
         name: 'Test User',
         location: undefined,
         experienceLevel: undefined,
-        skills: undefined
+        skills: undefined,
       });
     });
   });
@@ -216,7 +218,7 @@ describe('Clerk Authentication Service', () => {
       expect(userService.getUserByClerkId).toHaveBeenCalledWith('user_123');
       expect(result).toEqual({
         ...mockLocalUser,
-        clerkUser: mockClerkUser
+        clerkUser: mockClerkUser,
       });
     });
 

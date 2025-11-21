@@ -72,12 +72,4 @@ describe('Chat Service', () => {
     expect(typeof id1).toBe('string');
     expect(typeof id2).toBe('string');
   });
-
-  it('should generate message IDs', () => {
-    const id1 = chatService.generateMessageId();
-    const id2 = chatService.generateMessageId();
-    expect(id1).not.toBe(id2);
-    expect(typeof id1).toBe('string');
-    expect(typeof id2).toBe('string');
-  });
 });

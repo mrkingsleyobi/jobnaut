@@ -10,11 +10,11 @@ services:
       POSTGRES_PASSWORD: jobnaut_password
       POSTGRES_DB: jobnaut_dev
     ports:
-      - "5432:5432"
+      - '5432:5432'
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U jobnaut_user -d jobnaut_dev"]
+      test: ['CMD-SHELL', 'pg_isready -U jobnaut_user -d jobnaut_dev']
       interval: 10s
       timeout: 5s
       retries: 5
@@ -24,7 +24,7 @@ services:
     build: .
     container_name: jobnaut-backend
     ports:
-      - "3000:3000"
+      - '3000:3000'
     environment:
       - DATABASE_URL=postgresql://jobnaut_user:jobnaut_password@database:5432/jobnaut_dev
       - NODE_ENV=development
@@ -45,7 +45,7 @@ services:
     build: ./frontend
     container_name: jobnaut-frontend
     ports:
-      - "3001:3000"
+      - '3001:3000'
     environment:
       - NODE_ENV=development
       - API_BASE_URL=http://backend:3000
@@ -61,7 +61,7 @@ services:
     image: getmeili/meilisearch:v1.13
     container_name: jobnaut-meilisearch
     ports:
-      - "7700:7700"
+      - '7700:7700'
     environment:
       - MEILI_MASTER_KEY=jobnaut_meilisearch_master_key
       - MEILI_ENV=development

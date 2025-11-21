@@ -11,20 +11,21 @@ const userService = require('../../models/user');
  */
 const userRouter = router({
   // Get current user profile (protected)
-  getProfile: protectedProcedure
-    .query(async ({ ctx }) => {
-      // Use the real user profile service to get the user's profile
-      return await userProfileService.getProfile(ctx.user.id);
-    }),
+  getProfile: protectedProcedure.query(async ({ ctx }) => {
+    // Use the real user profile service to get the user's profile
+    return await userProfileService.getProfile(ctx.user.id);
+  }),
 
   // Update user profile (protected)
   updateProfile: protectedProcedure
-    .input(z.object({
-      name: z.string().optional(),
-      location: z.string().optional(),
-      experienceLevel: z.string().optional(),
-      skills: z.array(z.string()).optional(),
-    }))
+    .input(
+      z.object({
+        name: z.string().optional(),
+        location: z.string().optional(),
+        experienceLevel: z.string().optional(),
+        skills: z.array(z.string()).optional(),
+      })
+    )
     .mutation(async ({ input, ctx }) => {
       // Use the real user profile service to update the user's profile
       const updatedProfile = await userProfileService.updateProfile(ctx.user.id, input);
@@ -36,9 +37,11 @@ const userRouter = router({
 
   // Add skills to user profile (protected)
   addSkills: protectedProcedure
-    .input(z.object({
-      skills: z.array(z.string()),
-    }))
+    .input(
+      z.object({
+        skills: z.array(z.string()),
+      })
+    )
     .mutation(async ({ input, ctx }) => {
       // Use the real user profile service to add skills to the user's profile
       const updatedProfile = await userProfileService.addSkills(ctx.user.id, input.skills);
@@ -50,9 +53,11 @@ const userRouter = router({
 
   // Remove skills from user profile (protected)
   removeSkills: protectedProcedure
-    .input(z.object({
-      skills: z.array(z.string()),
-    }))
+    .input(
+      z.object({
+        skills: z.array(z.string()),
+      })
+    )
     .mutation(async ({ input, ctx }) => {
       // Use the real user profile service to remove skills from the user's profile
       const updatedProfile = await userProfileService.removeSkills(ctx.user.id, input.skills);

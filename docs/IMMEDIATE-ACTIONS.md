@@ -9,6 +9,7 @@
 ## ⚡ Do This NOW (< 30 minutes)
 
 ### 1. Remove Production Secrets from Git
+
 ```bash
 cd /home/user/jobnaut
 
@@ -28,6 +29,7 @@ git commit -m "SECURITY: Remove production credentials from repository"
 ---
 
 ### 2. Install Missing Dependencies
+
 ```bash
 # Backend
 npm install
@@ -44,6 +46,7 @@ npm test
 ---
 
 ### 3. Fix Security Vulnerabilities
+
 ```bash
 # Check vulnerabilities
 npm audit
@@ -65,6 +68,7 @@ npm audit fix
 ### 4. Fix Critical Bugs
 
 **Bug 1: Missing getUserProfile Method**
+
 ```javascript
 // File: src/services/userProfile.js
 // Add this method after getProfile():
@@ -75,6 +79,7 @@ async getUserProfile(userId) {
 ```
 
 **Bug 2: Remove Duplicate Server Config**
+
 ```javascript
 // File: src/index.js
 // Remove lines 1-30 (middleware setup)
@@ -82,6 +87,7 @@ async getUserProfile(userId) {
 ```
 
 **Bug 3: Fix Axios Version**
+
 ```javascript
 // File: package.json line 38
 // Change from:
@@ -98,10 +104,11 @@ async getUserProfile(userId) {
 **File:** `docker-compose.prod.yml`
 
 Remove lines 23-24:
+
 ```yaml
 # DELETE THESE LINES:
-    ports:
-      - "5432:5432"  # ❌ Exposes database to internet
+ports:
+  - '5432:5432' # ❌ Exposes database to internet
 ```
 
 The database should NOT be accessible from outside Docker network.
@@ -124,6 +131,7 @@ git commit -m "chore: Track package-lock.json files for reproducible builds"
 ### 7. Add Code Quality Tools
 
 **Install ESLint + Prettier:**
+
 ```bash
 npm install -D eslint prettier eslint-config-prettier
 npm install -D @typescript-eslint/parser @typescript-eslint/eslint-plugin
@@ -166,6 +174,7 @@ EOF
 **File:** `src/models/user.js`
 
 Extract repeated decryption logic:
+
 ```javascript
 // Add this helper function at the top of the file:
 function decryptUserFields(user) {
@@ -173,18 +182,20 @@ function decryptUserFields(user) {
 
   return {
     ...user,
-    name: user.name && typeof user.name === 'object'
-      ? encryptionService.decrypt(user.name)
-      : user.name,
-    location: user.location && typeof user.location === 'object'
-      ? encryptionService.decrypt(user.location)
-      : user.location,
-    experienceLevel: user.experienceLevel && typeof user.experienceLevel === 'object'
-      ? encryptionService.decrypt(user.experienceLevel)
-      : user.experienceLevel,
-    skills: user.skills && typeof user.skills === 'object' && user.skills.data
-      ? JSON.parse(encryptionService.decrypt(user.skills))
-      : user.skills,
+    name:
+      user.name && typeof user.name === 'object' ? encryptionService.decrypt(user.name) : user.name,
+    location:
+      user.location && typeof user.location === 'object'
+        ? encryptionService.decrypt(user.location)
+        : user.location,
+    experienceLevel:
+      user.experienceLevel && typeof user.experienceLevel === 'object'
+        ? encryptionService.decrypt(user.experienceLevel)
+        : user.experienceLevel,
+    skills:
+      user.skills && typeof user.skills === 'object' && user.skills.data
+        ? JSON.parse(encryptionService.decrypt(user.skills))
+        : user.skills,
   };
 }
 
@@ -197,6 +208,7 @@ return decryptUserFields(user);
 ### 9. Remove Backend Code from Frontend
 
 **Delete these directories:**
+
 ```bash
 rm -rf frontend/src/api/routers/
 rm -rf frontend/src/api/root.js
@@ -211,11 +223,13 @@ These are backend routers and should NOT be in the frontend.
 **68 console.log statements found across 15 files.**
 
 Priority files to fix:
+
 1. `src/services/jobService.js` (19 instances)
 2. `src/services/chatService.js` (9 instances)
 3. `src/auth/clerk.js` (3 instances)
 
 **Pattern to follow:**
+
 ```javascript
 // Before:
 console.log('Fetching jobs from JSearch API');
@@ -224,7 +238,7 @@ console.log('Fetching jobs from JSearch API');
 const logger = require('../utils/logger');
 logger.info('Fetching jobs from JSearch API', {
   query: searchQuery,
-  page: page
+  page: page,
 });
 ```
 
@@ -233,6 +247,7 @@ logger.info('Fetching jobs from JSearch API', {
 ## 🚀 Before Production (< 120 hours)
 
 ### Infrastructure Requirements
+
 - [ ] Set up error tracking (Sentry)
 - [ ] Configure monitoring (Prometheus + Grafana)
 - [ ] Implement Redis for distributed caching
@@ -243,6 +258,7 @@ logger.info('Fetching jobs from JSearch API', {
 - [ ] Configure log aggregation (ELK/Loki)
 
 ### Code Requirements
+
 - [ ] Migrate to TypeScript (critical services first)
 - [ ] Achieve 85%+ test coverage
 - [ ] Add E2E tests (Playwright)
@@ -253,6 +269,7 @@ logger.info('Fetching jobs from JSearch API', {
 - [ ] Add proper error boundaries
 
 ### Testing Requirements
+
 - [ ] Run load tests with k6 (target: 1000 concurrent users)
 - [ ] Penetration testing
 - [ ] Security audit
@@ -264,6 +281,7 @@ logger.info('Fetching jobs from JSearch API', {
 ## 📊 Progress Tracking
 
 ### Week 1: Security & Bugs
+
 - [ ] Secrets removed from git ✓ (30 min)
 - [ ] Dependencies installed ✓ (1 hour)
 - [ ] Critical bugs fixed (8 hours)
@@ -274,6 +292,7 @@ logger.info('Fetching jobs from JSearch API', {
 **Total:** 32 hours
 
 ### Week 2: Infrastructure
+
 - [ ] Secrets management (8 hours)
 - [ ] Error tracking (8 hours)
 - [ ] Monitoring setup (16 hours)
@@ -283,6 +302,7 @@ logger.info('Fetching jobs from JSearch API', {
 **Total:** 48 hours
 
 ### Week 3: Code Quality
+
 - [ ] TypeScript migration start (40 hours)
 - [ ] Test coverage to 85% (40 hours)
 - [ ] E2E tests (16 hours)
@@ -290,6 +310,7 @@ logger.info('Fetching jobs from JSearch API', {
 **Total:** 96 hours
 
 ### Week 4: Production Prep
+
 - [ ] Frontend fixes (24 hours)
 - [ ] API consolidation (16 hours)
 - [ ] Load testing (8 hours)
@@ -302,6 +323,7 @@ logger.info('Fetching jobs from JSearch API', {
 ## 🎯 Success Criteria
 
 ### Before Deployment
+
 - [ ] No secrets in repository
 - [ ] All tests passing (85%+ coverage)
 - [ ] No critical/high vulnerabilities
@@ -312,6 +334,7 @@ logger.info('Fetching jobs from JSearch API', {
 - [ ] Rollback procedure tested
 
 ### After Deployment
+
 - [ ] Error rate < 0.1%
 - [ ] Uptime > 99.9%
 - [ ] API response time < 200ms
@@ -323,11 +346,13 @@ logger.info('Fetching jobs from JSearch API', {
 ## 📞 Need Help?
 
 **Documentation:**
+
 - `/docs/codebase-analysis-report.md` - Full analysis
 - `/docs/production-readiness-report.md` - Production checklist
 - `/docs/production-deployment-action-plan.md` - Deployment guide
 
 **Key Findings:**
+
 - 🔴 **CRITICAL:** Hardcoded credentials in repository
 - 🔴 **CRITICAL:** No monitoring or error tracking
 - 🟡 **HIGH:** Missing dependencies (Jest)

@@ -3,6 +3,7 @@
 
 const { createClerkClient } = require('@clerk/clerk-sdk-node');
 const userService = require('../models/user');
+const logger = require('../utils/logger');
 
 /**
  * Clerk client instance
@@ -57,11 +58,11 @@ class ClerkAuthService {
         const session = await clerk.sessions.verifySessionToken(sessionToken);
         return session;
       } else {
-        console.error('Clerk client does not have verifySessionToken method');
+        logger.error('Clerk client does not have verifySessionToken method');
         return null;
       }
     } catch (error) {
-      console.error('Session validation failed:', error);
+      logger.error('Session validation failed', { error: error.message, stack: error.stack });
       return null;
     }
   }
@@ -84,7 +85,7 @@ class ClerkAuthService {
         clerkUser,
       };
     } catch (error) {
-      console.error('Failed to get user by session:', error);
+      logger.error('Failed to get user by session', { error: error.message, stack: error.stack });
       return null;
     }
   }

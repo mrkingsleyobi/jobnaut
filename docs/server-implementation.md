@@ -37,6 +37,7 @@
 ## File Structure
 
 The server is organized with:
+
 - `src/server.js`: Main server entry point
 - `src/index.js`: Express app configuration (already existed)
 - `config/env.js`: Environment configuration (already existed)

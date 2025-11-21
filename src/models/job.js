@@ -1,9 +1,8 @@
 // Job model service for JobNaut
 // Handles all job-related database operations
 
-const prisma = process.env.NODE_ENV === 'test'
-  ? require('../db/testClient')
-  : require('../db/client');
+const prisma =
+  process.env.NODE_ENV === 'test' ? require('../db/testClient') : require('../db/client');
 const NodeCache = require('node-cache');
 const cache = new NodeCache({ stdTTL: 300 }); // 5 minutes TTL
 
@@ -116,7 +115,8 @@ class JobService {
     }
 
     // SQLite doesn't support mode: 'insensitive', only use it with PostgreSQL
-    const isSQLite = process.env.NODE_ENV === 'test' ||
+    const isSQLite =
+      process.env.NODE_ENV === 'test' ||
       (process.env.DATABASE_URL && process.env.DATABASE_URL.startsWith('file:'));
 
     const searchConditions = {
@@ -208,7 +208,7 @@ class JobService {
     const skip = (page - 1) * limit;
 
     // Create OR conditions for each skill
-    const skillConditions = skills.map(skill => ({
+    const skillConditions = skills.map((skill) => ({
       skills: {
         path: '$[*]',
         string_contains: skill,

@@ -13,12 +13,9 @@ class EnvConfig {
    * Validate required environment variables
    */
   validateEnvironment() {
-    const requiredVars = [
-      'DATABASE_URL',
-      'CLERK_SECRET_KEY',
-    ];
+    const requiredVars = ['DATABASE_URL', 'CLERK_SECRET_KEY'];
 
-    const missingVars = requiredVars.filter(varName => !process.env[varName]);
+    const missingVars = requiredVars.filter((varName) => !process.env[varName]);
 
     if (missingVars.length > 0) {
       console.warn('Warning: Missing required environment variables:', missingVars);

@@ -52,12 +52,7 @@
       "Bash(./claude-flow *)",
       "Bash(./.claude/helpers/*)"
     ],
-    "deny": [
-      "Bash(rm -rf /)",
-      "Bash(curl * | bash)",
-      "Bash(wget * | sh)",
-      "Bash(eval *)"
-    ]
+    "deny": ["Bash(rm -rf /)", "Bash(curl * | bash)", "Bash(wget * | sh)", "Bash(eval *)"]
   },
   "hooks": {
     "PreToolUse": [
@@ -154,8 +149,5 @@
     ]
   },
   "includeCoAuthoredBy": true,
-  "enabledMcpjsonServers": [
-    "claude-flow",
-    "ruv-swarm"
-  ]
+  "enabledMcpjsonServers": ["claude-flow", "ruv-swarm"]
 }

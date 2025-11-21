@@ -30,83 +30,135 @@
         </div>
       </div>
 
-    <div class="profile-content">
-      <div class="profile-section">
-        <h2 class="section-title">Personal Information</h2>
-        <div class="profile-form">
-          <div class="form-row">
-            <div class="form-group">
-              <label for="name" class="form-label">Full Name</label>
-              <input
-                id="name"
-                v-model="profile.name"
-                type="text"
-                class="form-input"
-              />
+      <div class="profile-content">
+        <div class="profile-section">
+          <h2 class="section-title">Personal Information</h2>
+          <div class="profile-form">
+            <div class="form-row">
+              <div class="form-group">
+                <label for="name" class="form-label">Full Name</label>
+                <input id="name" v-model="profile.name" type="text" class="form-input" />
+              </div>
+
+              <div class="form-group">
+                <label for="location" class="form-label">Location</label>
+                <input id="location" v-model="profile.location" type="text" class="form-input" />
+              </div>
             </div>
 
             <div class="form-group">
-              <label for="location" class="form-label">Location</label>
-              <input
-                id="location"
-                v-model="profile.location"
-                type="text"
-                class="form-input"
-              />
+              <label for="bio" class="form-label">Bio</label>
+              <textarea
+                id="bio"
+                v-model="profile.bio"
+                class="form-textarea"
+                rows="4"
+                placeholder="Tell us about yourself..."
+              ></textarea>
+            </div>
+
+            <button @click="updateProfile" class="update-button">Update Profile</button>
+          </div>
+        </div>
+
+        <div class="profile-section">
+          <div class="section-header">
+            <h2 class="section-title">Skills</h2>
+            <div class="skills-stats">
+              <span class="skill-count">{{ profile.skills.length }} skills</span>
             </div>
           </div>
 
-          <div class="form-group">
-            <label for="bio" class="form-label">Bio</label>
-            <textarea
-              id="bio"
-              v-model="profile.bio"
-              class="form-textarea"
-              rows="4"
-              placeholder="Tell us about yourself..."
-            ></textarea>
-          </div>
+          <div class="skills-section">
+            <div class="skills-input">
+              <input
+                v-model="newSkill"
+                type="text"
+                placeholder="Add a skill (e.g., JavaScript, React, Python)"
+                class="form-input"
+                @keyup.enter="addSkill"
+              />
+              <button @click="addSkill" class="add-skill-button">Add</button>
+            </div>
 
-          <button @click="updateProfile" class="update-button">
-            Update Profile
-          </button>
+            <div class="skills-list">
+              <div v-for="(skill, index) in profile.skills" :key="index" class="skill-item">
+                <span class="skill-name">{{ skill }}</span>
+                <button @click="removeSkill(index)" class="remove-skill-button">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    class="remove-icon"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
 
-      <div class="profile-section">
-        <div class="section-header">
-          <h2 class="section-title">Skills</h2>
-          <div class="skills-stats">
-            <span class="skill-count">{{ profile.skills.length }} skills</span>
-          </div>
-        </div>
-
-        <div class="skills-section">
-          <div class="skills-input">
-            <input
-              v-model="newSkill"
-              type="text"
-              placeholder="Add a skill (e.g., JavaScript, React, Python)"
-              class="form-input"
-              @keyup.enter="addSkill"
-            />
-            <button @click="addSkill" class="add-skill-button">Add</button>
+        <div class="profile-section">
+          <div class="section-header">
+            <h2 class="section-title">Saved Jobs</h2>
+            <div class="saved-jobs-stats">
+              <span class="job-count">{{ savedJobs.length }} saved</span>
+            </div>
           </div>
 
-          <div class="skills-list">
-            <div
-              v-for="(skill, index) in profile.skills"
-              :key="index"
-              class="skill-item"
-            >
-              <span class="skill-name">{{ skill }}</span>
-              <button
-                @click="removeSkill(index)"
-                class="remove-skill-button"
+          <div v-if="savedJobs.length === 0" class="no-saved-jobs">
+            <div class="empty-state">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="empty-icon"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
               >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"
+                />
+              </svg>
+              <p>You haven't saved any jobs yet</p>
+              <NuxtLink to="/jobs" class="browse-jobs-link"> Browse Jobs </NuxtLink>
+            </div>
+          </div>
+
+          <div v-else class="saved-jobs-list">
+            <div v-for="job in savedJobs" :key="job.id" class="saved-job-card">
+              <div class="job-info">
+                <h3 class="job-title">{{ job.title }}</h3>
+                <p class="job-company">{{ job.company }}</p>
+                <p class="job-location">{{ job.location }}</p>
+              </div>
+
+              <div class="job-actions">
+                <button @click="viewJob(job.id)" class="view-button">View Details</button>
+                <button @click="removeSavedJob(job.id)" class="remove-button">Remove</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Skill Gap Analysis Section -->
+        <div v-if="skillGapData" class="profile-section">
+          <div class="section-header">
+            <h2 class="section-title">Skill Gap Analysis</h2>
+            <div class="section-actions">
+              <button @click="loadSkillGapAnalysis" class="refresh-button">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  class="remove-icon"
+                  class="refresh-icon"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -115,119 +167,56 @@
                     stroke-linecap="round"
                     stroke-linejoin="round"
                     stroke-width="2"
-                    d="M6 18L18 6M6 6l12 12"
+                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
                   />
                 </svg>
+                Refresh Analysis
               </button>
             </div>
           </div>
-        </div>
-      </div>
 
-      <div class="profile-section">
-        <div class="section-header">
-          <h2 class="section-title">Saved Jobs</h2>
-          <div class="saved-jobs-stats">
-            <span class="job-count">{{ savedJobs.length }} saved</span>
+          <SkillGapAnalysis
+            :match-score="skillGapData.gapScore"
+            :skills-data="formatSkillsData(skillGapData)"
+            :missing-skills="formatMissingSkills(skillGapData)"
+          />
+        </div>
+
+        <!-- Overall Skill Gap Analysis -->
+        <div v-if="overallSkillGapData" class="profile-section">
+          <div class="section-header">
+            <h2 class="section-title">Overall Skill Development</h2>
           </div>
-        </div>
 
-        <div v-if="savedJobs.length === 0" class="no-saved-jobs">
-          <div class="empty-state">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="empty-icon"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
+          <div class="overall-assessment">
+            <div class="assessment-content">
+              <h3 class="assessment-title">Your Overall Skill Level</h3>
+              <p class="assessment-text">{{ overallSkillGapData.overallAssessment }}</p>
+              <div class="assessment-score">
+                <span class="score-label">Average Match Score:</span>
+                <span class="score-value">{{ overallSkillGapData.averageGapScore }}%</span>
+              </div>
+            </div>
+
+            <div
+              v-if="
+                overallSkillGapData.recommendations &&
+                overallSkillGapData.recommendations.length > 0
+              "
+              class="recommendations"
             >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"
-              />
-            </svg>
-            <p>You haven't saved any jobs yet</p>
-            <NuxtLink to="/jobs" class="browse-jobs-link">
-              Browse Jobs
-            </NuxtLink>
-          </div>
-        </div>
-
-        <div v-else class="saved-jobs-list">
-          <div
-            v-for="job in savedJobs"
-            :key="job.id"
-            class="saved-job-card"
-          >
-            <div class="job-info">
-              <h3 class="job-title">{{ job.title }}</h3>
-              <p class="job-company">{{ job.company }}</p>
-              <p class="job-location">{{ job.location }}</p>
-            </div>
-
-            <div class="job-actions">
-              <button @click="viewJob(job.id)" class="view-button">
-                View Details
-              </button>
-              <button @click="removeSavedJob(job.id)" class="remove-button">
-                Remove
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Skill Gap Analysis Section -->
-      <div v-if="skillGapData" class="profile-section">
-        <div class="section-header">
-          <h2 class="section-title">Skill Gap Analysis</h2>
-          <div class="section-actions">
-            <button @click="loadSkillGapAnalysis" class="refresh-button">
-              <svg xmlns="http://www.w3.org/2000/svg" class="refresh-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-              </svg>
-              Refresh Analysis
-            </button>
-          </div>
-        </div>
-
-        <SkillGapAnalysis
-          :match-score="skillGapData.gapScore"
-          :skills-data="formatSkillsData(skillGapData)"
-          :missing-skills="formatMissingSkills(skillGapData)"
-        />
-      </div>
-
-      <!-- Overall Skill Gap Analysis -->
-      <div v-if="overallSkillGapData" class="profile-section">
-        <div class="section-header">
-          <h2 class="section-title">Overall Skill Development</h2>
-        </div>
-
-        <div class="overall-assessment">
-          <div class="assessment-content">
-            <h3 class="assessment-title">Your Overall Skill Level</h3>
-            <p class="assessment-text">{{ overallSkillGapData.overallAssessment }}</p>
-            <div class="assessment-score">
-              <span class="score-label">Average Match Score:</span>
-              <span class="score-value">{{ overallSkillGapData.averageGapScore }}%</span>
-            </div>
-          </div>
-
-          <div v-if="overallSkillGapData.recommendations && overallSkillGapData.recommendations.length > 0" class="recommendations">
-            <h4 class="recommendations-title">Learning Recommendations</h4>
-            <div class="recommendations-list">
-              <div
-                v-for="(rec, index) in overallSkillGapData.recommendations"
-                :key="index"
-                class="recommendation-item"
-                :class="`priority-${rec.priority}`"
-              >
-                <h5 class="recommendation-title">{{ rec.title }}</h5>
-                <p class="recommendation-description">{{ rec.description }}</p>
-                <span class="recommendation-time">{{ rec.estimatedTime }}</span>
+              <h4 class="recommendations-title">Learning Recommendations</h4>
+              <div class="recommendations-list">
+                <div
+                  v-for="(rec, index) in overallSkillGapData.recommendations"
+                  :key="index"
+                  class="recommendation-item"
+                  :class="`priority-${rec.priority}`"
+                >
+                  <h5 class="recommendation-title">{{ rec.title }}</h5>
+                  <p class="recommendation-description">{{ rec.description }}</p>
+                  <span class="recommendation-time">{{ rec.estimatedTime }}</span>
+                </div>
               </div>
             </div>
           </div>
@@ -235,17 +224,16 @@
       </div>
     </div>
   </div>
-</div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
-import trpc from '../src/api/trpcClient.js'
-import SkillGapAnalysis from '../components/visualizations/SkillGapAnalysis.vue'
+import { ref, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
+import trpc from '../src/api/trpcClient.js';
+import SkillGapAnalysis from '../components/visualizations/SkillGapAnalysis.vue';
 
 // Router
-const router = useRouter()
+const router = useRouter();
 
 // Reactive state
 const profile = ref({
@@ -253,19 +241,19 @@ const profile = ref({
   email: '',
   location: '',
   bio: '',
-  skills: []
-})
+  skills: [],
+});
 
-const newSkill = ref('')
-const savedJobs = ref([])
+const newSkill = ref('');
+const savedJobs = ref([]);
 
-const loading = ref(true)
-const userId = 'user123' // In a real app, this would come from auth context
+const loading = ref(true);
+const userId = 'user123'; // In a real app, this would come from auth context
 
 // Skill gap analysis state
-const skillGapData = ref(null)
-const skillGapLoading = ref(false)
-const overallSkillGapData = ref(null)
+const skillGapData = ref(null);
+const skillGapLoading = ref(false);
+const overallSkillGapData = ref(null);
 
 // Methods
 const updateProfile = async () => {
@@ -273,11 +261,11 @@ const updateProfile = async () => {
     const result = await trpc.user.updateProfile.mutate({
       name: profile.value.name,
       location: profile.value.location,
-      bio: profile.value.bio
-    })
+      bio: profile.value.bio,
+    });
 
     if (result.success) {
-      alert('Profile updated successfully!')
+      alert('Profile updated successfully!');
       // Update local profile data with the returned data
       if (result.profile) {
         profile.value = {
@@ -285,75 +273,75 @@ const updateProfile = async () => {
           name: result.profile.name,
           location: result.profile.location,
           bio: result.profile.bio || '',
-          skills: result.profile.skills || []
-        }
+          skills: result.profile.skills || [],
+        };
       }
     }
   } catch (error) {
-    console.error('Error updating profile:', error)
-    alert('Failed to update profile: ' + error.message)
+    console.error('Error updating profile:', error);
+    alert('Failed to update profile: ' + error.message);
   }
-}
+};
 
 const addSkill = async () => {
   if (newSkill.value.trim() !== '') {
     try {
       const result = await trpc.user.addSkills.mutate({
-        skills: [newSkill.value.trim()]
-      })
+        skills: [newSkill.value.trim()],
+      });
 
       if (result.success) {
-        profile.value.skills = result.profile.skills
-        newSkill.value = ''
+        profile.value.skills = result.profile.skills;
+        newSkill.value = '';
       }
     } catch (error) {
-      console.error('Error adding skill:', error)
-      alert('Failed to add skill: ' + error.message)
+      console.error('Error adding skill:', error);
+      alert('Failed to add skill: ' + error.message);
     }
   }
-}
+};
 
 const removeSkill = async (index) => {
   try {
-    const skillToRemove = profile.value.skills[index]
+    const skillToRemove = profile.value.skills[index];
     const result = await trpc.user.removeSkills.mutate({
-      skills: [skillToRemove]
-    })
+      skills: [skillToRemove],
+    });
 
     if (result.success) {
-      profile.value.skills = result.profile.skills
+      profile.value.skills = result.profile.skills;
     }
   } catch (error) {
-    console.error('Error removing skill:', error)
-    alert('Failed to remove skill: ' + error.message)
+    console.error('Error removing skill:', error);
+    alert('Failed to remove skill: ' + error.message);
   }
-}
+};
 
 const removeSavedJob = async (jobId) => {
   try {
     const result = await trpc.savedJobs.removeSavedJob.mutate({
       userId,
-      jobId: jobId.toString()
-    })
+      jobId: jobId.toString(),
+    });
 
     if (result.success) {
       // Refresh saved jobs list
-      await loadSavedJobs()
+      await loadSavedJobs();
     }
   } catch (error) {
-    console.error('Error removing saved job:', error)
-    alert('Failed to remove saved job: ' + error.message)
+    console.error('Error removing saved job:', error);
+    alert('Failed to remove saved job: ' + error.message);
   }
-}
+};
 
 const viewJob = (jobId) => {
-  router.push(`/jobs/${jobId}`)
-}
+  router.push(`/jobs/${jobId}`);
+};
 
 // Load user profile data
 const loadUserProfile = async () => {
   try {
-    const profileResult = await trpc.user.getProfile.query()
+    const profileResult = await trpc.user.getProfile.query();
 
     if (profileResult) {
       profile.value = {
@@ -362,118 +350,113 @@ const loadUserProfile = async () => {
         email: profileResult.email,
         location: profileResult.location,
         bio: profileResult.bio || '',
-        skills: profileResult.skills || []
-      }
+        skills: profileResult.skills || [],
+      };
     }
   } catch (error) {
-    console.error('Error loading user profile:', error)
+    console.error('Error loading user profile:', error);
     // Use mock data as fallback
     profile.value = {
       name: 'John Doe',
       email: 'john.doe@example.com',
       location: 'San Francisco, CA',
       bio: 'Software engineer with 5 years of experience in web development. Passionate about creating innovative solutions and learning new technologies.',
-      skills: ['JavaScript', 'React', 'Node.js', 'Python', 'SQL', 'Docker']
-    }
+      skills: ['JavaScript', 'React', 'Node.js', 'Python', 'SQL', 'Docker'],
+    };
   }
-}
+};
 
 // Load saved jobs data
 const loadSavedJobs = async () => {
   try {
-    const result = await trpc.savedJobs.getSavedJobs.query({ userId })
+    const result = await trpc.savedJobs.getSavedJobs.query({ userId });
 
     if (result.success) {
       // Mock job data since we don't have a jobs API yet
       // In a real app, you would fetch job details from a jobs API
-      savedJobs.value = result.data.map(savedJob => ({
+      savedJobs.value = result.data.map((savedJob) => ({
         id: parseInt(savedJob.jobId),
         title: `Job Title ${savedJob.jobId}`,
         company: `Company ${savedJob.jobId}`,
-        location: 'San Francisco, CA'
-      }))
+        location: 'San Francisco, CA',
+      }));
     }
   } catch (error) {
-    console.error('Error loading saved jobs:', error)
+    console.error('Error loading saved jobs:', error);
     // Use mock data as fallback
     savedJobs.value = [
       {
         id: 1,
         title: 'Software Engineer',
         company: 'Tech Corp',
-        location: 'San Francisco, CA'
+        location: 'San Francisco, CA',
       },
       {
         id: 3,
         title: 'Senior Frontend Developer',
         company: 'Web Solutions',
-        location: 'Remote'
+        location: 'Remote',
       },
       {
         id: 5,
         title: 'UX Designer',
         company: 'Design Studio',
-        location: 'Seattle, WA'
-      }
-    ]
+        location: 'Seattle, WA',
+      },
+    ];
   }
-}
+};
 
 // Formatting methods for skill gap data
 const formatSkillsData = (gapData) => {
-  if (!gapData) return []
+  if (!gapData) return [];
 
   // Combine matching and missing skills for visualization
-  const allSkills = [...gapData.matchingSkills, ...gapData.missingSkills]
+  const allSkills = [...gapData.matchingSkills, ...gapData.missingSkills];
 
-  return allSkills.map(skill => {
-    const isMatching = gapData.matchingSkills.includes(skill)
-    const current = isMatching ? 100 : 0
-    const required = 100 // All skills are required
-    const gap = required - current
+  return allSkills.map((skill) => {
+    const isMatching = gapData.matchingSkills.includes(skill);
+    const current = isMatching ? 100 : 0;
+    const required = 100; // All skills are required
+    const gap = required - current;
 
     return {
       name: skill,
       current: current,
       required: required,
       gap: gap,
-      recommendation: isMatching
-        ? 'Maintain proficiency'
-        : `Learn ${skill} to improve match score`
-    }
-  })
-}
+      recommendation: isMatching ? 'Maintain proficiency' : `Learn ${skill} to improve match score`,
+    };
+  });
+};
 
 const formatMissingSkills = (gapData) => {
-  if (!gapData || !gapData.missingSkills) return []
+  if (!gapData || !gapData.missingSkills) return [];
 
   return gapData.missingSkills.map((skill, index) => {
     // Assign priority based on position (first skills are higher priority)
-    let priority = 'low'
-    if (index < 2) priority = 'high'
-    else if (index < 5) priority = 'medium'
+    let priority = 'low';
+    if (index < 2) priority = 'high';
+    else if (index < 5) priority = 'medium';
 
     return {
       name: skill,
       priority: priority,
-      description: `Learning ${skill} will improve your match score for target positions.`
-    }
-  })
-}
+      description: `Learning ${skill} will improve your match score for target positions.`,
+    };
+  });
+};
 
 // Load all data on component mount
 const loadData = async () => {
-  loading.value = true
-  await Promise.all([
-    loadUserProfile(),
-    loadSavedJobs()
-  ])
-  loading.value = false
-}
+  loading.value = true;
+  await Promise.all([loadUserProfile(), loadSavedJobs()]);
+  loading.value = false;
+};
 
 onMounted(() => {
-  loadData()
-})
+  loadData();
+});
 </script>
 
 <style scoped>
@@ -755,7 +738,9 @@ onMounted(() => {
   border-radius: 8px;
   padding: 1.5rem;
   border: 1px solid #e5e7eb;
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition:
+    transform 0.2s,
+    box-shadow 0.2s;
 }
 
 .saved-job-card:hover {
@@ -1021,4 +1006,3 @@ onMounted(() => {
   }
 }
 </style>
-

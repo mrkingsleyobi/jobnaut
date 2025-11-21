@@ -47,7 +47,7 @@ describe('Skill Gap Analysis Service', () => {
         missingSkillsCount: 3,
         missingSkills: ['Vue.js', 'Python', 'Docker'],
         jobSkills: ['JavaScript', 'React', 'Vue.js', 'Python', 'Docker'],
-        matchPercentage: 40
+        matchPercentage: 40,
       };
 
       const recommendations = skillGapService.generateRecommendations(gapAnalysis);
@@ -64,7 +64,7 @@ describe('Skill Gap Analysis Service', () => {
         missingSkillsCount: 1,
         missingSkills: ['Advanced Vue.js'],
         jobSkills: ['JavaScript', 'React', 'Vue.js', 'Advanced Vue.js'],
-        matchPercentage: 85
+        matchPercentage: 85,
       };
 
       const recommendations = skillGapService.generateRecommendations(gapAnalysis);

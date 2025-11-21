@@ -1,9 +1,8 @@
 // Saved Job model service for JobNaut
 // Handles all saved job-related database operations
 
-const prisma = process.env.NODE_ENV === 'test'
-  ? require('../db/testClient')
-  : require('../db/client');
+const prisma =
+  process.env.NODE_ENV === 'test' ? require('../db/testClient') : require('../db/client');
 const NodeCache = require('node-cache');
 const savedJobCache = new NodeCache({ stdTTL: 300 }); // 5 minutes TTL
 

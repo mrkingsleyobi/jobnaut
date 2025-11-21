@@ -47,8 +47,8 @@ describe('tRPC API', () => {
       // Arrange
       const mockReq = {
         headers: {
-          authorization: 'Bearer test_token'
-        }
+          authorization: 'Bearer test_token',
+        },
       };
       const mockRes = {};
 

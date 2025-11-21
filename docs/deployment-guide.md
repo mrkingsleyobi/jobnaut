@@ -179,6 +179,7 @@ docker-compose logs frontend
 In case of deployment issues:
 
 1. **Rollback Database Migrations:**
+
    ```bash
    npx prisma migrate resolve --rolled-back "migration_name"
    ```

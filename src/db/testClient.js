@@ -10,9 +10,9 @@ const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient({
   datasources: {
     db: {
-      url: 'file:./test.db'
-    }
-  }
+      url: 'file:./test.db',
+    },
+  },
 });
 
 module.exports = prisma;

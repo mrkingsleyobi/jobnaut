@@ -3,6 +3,7 @@
 ## Database Optimizations
 
 ### 1. Add Database Indexes
+
 The current Prisma schema lacks indexes on frequently queried fields. Add the following indexes to improve query performance:
 
 ```prisma
@@ -29,28 +30,36 @@ model Job {
 ```
 
 ### 2. Optimize Search Queries
+
 The current search implementation performs two separate queries (one for data, one for count). This can be optimized by using a single query with aggregation:
 
 ```javascript
 // Current implementation
 const [jobs, total] = await Promise.all([
-  prisma.job.findMany({ /* ... */ }),
-  prisma.job.count({ /* ... */ })
+  prisma.job.findMany({
+    /* ... */
+  }),
+  prisma.job.count({
+    /* ... */
+  }),
 ]);
 
 // Optimized implementation
 const result = await prisma.job.aggregate({
-  where: { /* search conditions */ },
+  where: {
+    /* search conditions */
+  },
   _count: true,
   skip,
   take: limit,
-  orderBy: { postedDate: 'desc' }
+  orderBy: { postedDate: 'desc' },
 });
 ```
 
 ## API Performance Optimizations
 
 ### 1. Implement Response Field Selection
+
 Add support for field selection to reduce response size:
 
 ```javascript
@@ -77,6 +86,7 @@ buildSelectObject(fields) {
 ```
 
 ### 2. Implement Caching Layer
+
 Add a caching layer for frequently accessed data:
 
 ```javascript
@@ -103,6 +113,7 @@ async getJobById(id) {
 ## Batch Processing Optimizations
 
 ### 1. Optimize NLP Processing
+
 Instead of processing jobs one by one, batch process them:
 
 ```javascript
@@ -148,14 +159,17 @@ async batchExtractSkills(descriptions) {
 ## Frontend Performance Optimizations
 
 ### 1. Implement Virtual Scrolling
+
 For job listings with many items, implement virtual scrolling to improve rendering performance.
 
 ### 2. Optimize Images and Assets
+
 - Use modern image formats (WebP)
 - Implement lazy loading for images
 - Compress and minify CSS/JS assets
 
 ### 3. Code Splitting
+
 Implement code splitting for better initial load times:
 
 ```javascript
@@ -164,16 +178,17 @@ export default {
   build: {
     optimization: {
       splitChunks: {
-        chunks: 'all'
-      }
-    }
-  }
-}
+        chunks: 'all',
+      },
+    },
+  },
+};
 ```
 
 ## API Response Optimization
 
 ### 1. Implement Pagination Cursor-Based
+
 Switch from offset-based to cursor-based pagination for better performance with large datasets:
 
 ```javascript
@@ -199,6 +214,7 @@ async getJobsWithCursor(cursor = null, limit = 10) {
 ## Monitoring and Profiling
 
 ### 1. Add Performance Monitoring
+
 Implement performance monitoring to identify bottlenecks:
 
 ```javascript
@@ -219,6 +235,7 @@ async function withTiming(fn, label) {
 ```
 
 ### 2. Database Query Optimization
+
 Use Prisma's query logging to identify slow queries:
 
 ```javascript
@@ -228,14 +245,15 @@ const prisma = new PrismaClient({
     { level: 'query', emit: 'event' },
     { level: 'error', emit: 'stdout' },
     { level: 'info', emit: 'stdout' },
-    { level: 'warn', emit: 'stdout' }
-  ]
+    { level: 'warn', emit: 'stdout' },
+  ],
 });
 ```
 
 ## Caching Strategy
 
 ### 1. HTTP Caching
+
 Implement HTTP caching headers for static content:
 
 ```javascript
@@ -247,6 +265,7 @@ app.get('/api/jobs/:id', (req, res) => {
 ```
 
 ### 2. Redis Caching
+
 For production environments, consider using Redis for distributed caching:
 
 ```javascript
@@ -268,6 +287,7 @@ async function getCachedData(key, fetchFn, ttl = 300) {
 ## Conclusion
 
 These optimizations will significantly improve the performance of the JobNaut application by:
+
 1. Reducing database query times through proper indexing
 2. Minimizing API response sizes through field selection
 3. Improving processing efficiency through batch operations

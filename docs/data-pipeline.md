@@ -33,12 +33,14 @@ Location: `src/python/data_pipeline/ingest.py`
 The data ingestion pipeline fetches job data from the JSearch API, processes it with NLP services, and indexes it in Meilisearch.
 
 #### Key Features:
+
 - Fetches jobs from JSearch API with configurable queries
 - Processes job descriptions with NLP for skill extraction
 - Indexes jobs in Meilisearch for fast search
 - Handles rate limiting and error recovery
 
 #### Configuration:
+
 - `JSEARCH_API_KEY` - API key for JSearch
 - `MEILISEARCH_HOST` - Meilisearch server URL
 - `MEILISEARCH_API_KEY` - API key for Meilisearch
@@ -51,18 +53,21 @@ Location: `src/python/nlp/main.py`
 The NLP service uses Hugging Face models to extract skills from job descriptions and classify jobs.
 
 #### Key Features:
+
 - Skill extraction from job descriptions
 - Job category classification
 - Experience level determination
 - Batch processing capabilities
 
 #### Endpoints:
+
 - `POST /extract-skills` - Extract skills from text
 - `POST /batch-extract-skills` - Extract skills from multiple texts
 - `POST /analyze-job` - Analyze job description with full analysis
 - `GET /` - Health check endpoint
 
 #### Configuration:
+
 - `HUGGING_FACE_API_KEY` - API key for Hugging Face Inference API
 
 ### 3. Job Service (Backend)
@@ -72,6 +77,7 @@ Location: `src/services/jobService.js`
 The job service coordinates between external APIs, the NLP service, and the database.
 
 #### Key Features:
+
 - JSearch API integration for job fetching
 - NLP service integration for skill extraction
 - Meilisearch integration for indexing
@@ -79,6 +85,7 @@ The job service coordinates between external APIs, the NLP service, and the data
 - Job recommendation algorithms
 
 #### Methods:
+
 - `fetchJobsFromJSearch()` - Fetch jobs from JSearch API
 - `extractSkillsWithNLP()` - Extract skills using NLP service
 - `batchExtractSkills()` - Extract skills from multiple descriptions

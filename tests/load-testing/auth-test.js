@@ -9,18 +9,18 @@ const errorRate = new Rate('errors');
 export const options = {
   // Simulate concurrent users
   stages: [
-    { duration: '30s', target: 25 },    // Ramp up to 25 users over 30 seconds
-    { duration: '1m', target: 25 },     // Stay at 25 users for 1 minute
-    { duration: '30s', target: 50 },    // Ramp up to 50 users over 30 seconds
-    { duration: '1m', target: 50 },     // Stay at 50 users for 1 minute
-    { duration: '30s', target: 0 },     // Ramp down to 0 users over 30 seconds
+    { duration: '30s', target: 25 }, // Ramp up to 25 users over 30 seconds
+    { duration: '1m', target: 25 }, // Stay at 25 users for 1 minute
+    { duration: '30s', target: 50 }, // Ramp up to 50 users over 30 seconds
+    { duration: '1m', target: 50 }, // Stay at 50 users for 1 minute
+    { duration: '30s', target: 0 }, // Ramp down to 0 users over 30 seconds
   ],
 
   // Thresholds for authentication performance
   thresholds: {
-    'http_req_duration': ['p(95)<800'], // 95% of requests should be below 800ms
+    http_req_duration: ['p(95)<800'], // 95% of requests should be below 800ms
     'http_req_duration{kind:health_check}': ['avg<500'], // Average health check requests should be below 500ms
-    'errors': ['rate<0.05'], // Error rate should be less than 5%
+    errors: ['rate<0.05'], // Error rate should be less than 5%
   },
 };
 
@@ -51,14 +51,18 @@ export default function () {
   sleep(0.5);
 
   // Test user skills endpoint (without authentication) - POST request should return 401
-  const skillsRes = http.post(`${BASE_URL}/api/v1/user/skills`, JSON.stringify({
-    skills: ['JavaScript', 'React']
-  }), {
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    tags: { kind: 'skills_unauth' },
-  });
+  const skillsRes = http.post(
+    `${BASE_URL}/api/v1/user/skills`,
+    JSON.stringify({
+      skills: ['JavaScript', 'React'],
+    }),
+    {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      tags: { kind: 'skills_unauth' },
+    }
+  );
 
   check(skillsRes, {
     'skills unauthenticated status is 401 or 500': (r) => r.status === 401 || r.status === 500,
@@ -73,17 +77,22 @@ export default function () {
     { method: 'POST', url: '/api/v1/user/skills', expectedStatus: 401 },
   ];
 
-  endpoints.forEach(endpoint => {
+  endpoints.forEach((endpoint) => {
     let res;
     if (endpoint.method === 'POST') {
-      res = http.request(endpoint.method, `${BASE_URL}${endpoint.url}`, JSON.stringify({
-        skills: ['test']
-      }), {
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        tags: { kind: 'api_access' },
-      });
+      res = http.request(
+        endpoint.method,
+        `${BASE_URL}${endpoint.url}`,
+        JSON.stringify({
+          skills: ['test'],
+        }),
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          tags: { kind: 'api_access' },
+        }
+      );
     } else {
       res = http.request(endpoint.method, `${BASE_URL}${endpoint.url}`, null, {
         tags: { kind: 'api_access' },

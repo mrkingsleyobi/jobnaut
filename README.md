@@ -8,12 +8,14 @@ JobNaut is a cutting-edge AI Career Coach & Job Search Platform that delivers pe
 ## 🚀 Features
 
 ### 🔍 Intelligent Job Search
+
 - Real-time job listings from multiple sources
 - Advanced search with filters (location, salary, experience level)
 - Skill-based job recommendations
 - Fast search powered by Meilisearch
 
 ### 🤖 AI Career Coach
+
 - Personalized career guidance and advice with AI career coach
 - Interactive chatbot powered by Hugging Face models for career coaching
 - Advanced skill gap analysis tool with personalized improvement suggestions
@@ -21,12 +23,14 @@ JobNaut is a cutting-edge AI Career Coach & Job Search Platform that delivers pe
 - Career transition assistant for switching industries or roles
 
 ### 👤 User Profile Management
+
 - Comprehensive profile with skills and experience
 - Saved jobs tracking with application status
 - Personalized job recommendations
 - Career progress monitoring
 
 ### 📊 Analytics & Insights
+
 - Skill demand trend analysis for 2025 job market
 - Salary range visualization and compensation insights
 - Market insights and personalized job market recommendations
@@ -34,6 +38,7 @@ JobNaut is a cutting-edge AI Career Coach & Job Search Platform that delivers pe
 - Professional skills assessment and competency mapping
 
 ### 🛡️ Security & Privacy
+
 - Secure authentication with Clerk
 - Data encryption for sensitive information
 - Rate limiting and DDoS protection
@@ -42,6 +47,7 @@ JobNaut is a cutting-edge AI Career Coach & Job Search Platform that delivers pe
 ## 🏗️ Architecture
 
 ### Backend
+
 - **Node.js** with **tRPC** for type-safe API development
 - **PostgreSQL** database with **Prisma ORM**
 - **Meilisearch** for fast, relevant search
@@ -49,18 +55,21 @@ JobNaut is a cutting-edge AI Career Coach & Job Search Platform that delivers pe
 - **Clerk** for authentication and user management
 
 ### Frontend
+
 - **Nuxt 3** (Vue.js) for modern, responsive UI
 - **Tailwind CSS** for styling
 - **Vitest** and **Jest** for comprehensive testing
 - **Responsive design** for mobile and desktop
 
 ### AI Services
+
 - **Python FastAPI** for AI microservices
 - **Hugging Face Transformers** for NLP models
 - **LangChain** for conversation management
 - **JSearch API** for job data aggregation
 
 ### Infrastructure
+
 - **Docker** containerization for easy deployment
 - **GitHub Actions** for CI/CD
 - **k6** for load testing
@@ -69,6 +78,7 @@ JobNaut is a cutting-edge AI Career Coach & Job Search Platform that delivers pe
 ## 📦 Installation
 
 ### Prerequisites
+
 - Node.js 18+
 - PostgreSQL
 - Docker (optional, for containerized deployment)
@@ -77,12 +87,14 @@ JobNaut is a cutting-edge AI Career Coach & Job Search Platform that delivers pe
 ### Quick Start
 
 1. **Clone the repository:**
+
 ```bash
 git clone https://github.com/mrkingsleyobi/jobnaut.git
 cd jobnaut
 ```
 
 2. **Install dependencies:**
+
 ```bash
 # Backend
 npm install
@@ -94,6 +106,7 @@ cd ..
 ```
 
 3. **Set up environment variables:**
+
 ```bash
 # Backend environment (.env)
 cp .env.example .env
@@ -105,6 +118,7 @@ cp frontend/.env.example frontend/.env
 ```
 
 4. **Run the development server:**
+
 ```bash
 # Start backend
 npm run dev
@@ -115,6 +129,7 @@ npm run dev
 ```
 
 5. **Run AI services (optional):**
+
 ```bash
 # Navigate to AI services directory
 cd ai-services
@@ -125,11 +140,13 @@ python main.py
 ## 🐳 Docker Deployment
 
 ### Development Setup
+
 ```bash
 docker-compose up -d
 ```
 
 ### Production Deployment
+
 ```bash
 # Build and push images
 docker build -t jobnaut/backend:latest .
@@ -142,17 +159,20 @@ docker-compose -f docker-compose.prod.yml up -d
 ## 🧪 Testing
 
 ### Backend Tests
+
 ```bash
 npm test
 ```
 
 ### Frontend Tests
+
 ```bash
 cd frontend
 npm test
 ```
 
 ### Load Testing
+
 ```bash
 # Install k6
 npm install -g k6
@@ -193,6 +213,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 🚀 Ready for Production!
 
 JobNaut is production-ready with:
+
 - Containerized deployment
 - Automated CI/CD pipeline
 - Comprehensive monitoring

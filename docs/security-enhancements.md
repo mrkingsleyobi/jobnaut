@@ -9,42 +9,50 @@ The current implementation has a solid foundation with Clerk authentication, but
 ### 1. Input Validation and Sanitization
 
 #### Current Issues:
+
 - Limited input validation in API endpoints
 - No sanitization of user inputs
 - Potential for injection attacks
 
 #### Recommendations:
+
 ```javascript
 // Add input validation middleware
 const { body, validationResult } = require('express-validator');
 
 // Example validation for user profile update
-router.put('/profile', [
-  authMiddleware,
-  body('name').isLength({ min: 1, max: 100 }).trim().escape(),
-  body('location').isLength({ max: 100 }).trim().escape(),
-  body('experienceLevel').isIn(['entry', 'mid', 'senior', 'lead']).optional(),
-  body('skills').isArray().optional(),
-  body('skills.*').isString().trim().escape()
-], async (req, res) => {
-  // Check for validation errors
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(400).json({ errors: errors.array() });
-  }
+router.put(
+  '/profile',
+  [
+    authMiddleware,
+    body('name').isLength({ min: 1, max: 100 }).trim().escape(),
+    body('location').isLength({ max: 100 }).trim().escape(),
+    body('experienceLevel').isIn(['entry', 'mid', 'senior', 'lead']).optional(),
+    body('skills').isArray().optional(),
+    body('skills.*').isString().trim().escape(),
+  ],
+  async (req, res) => {
+    // Check for validation errors
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
 
-  // Process validated data
-  // ...
-});
+    // Process validated data
+    // ...
+  }
+);
 ```
 
 ### 2. Rate Limiting
 
 #### Current Issues:
+
 - No rate limiting on API endpoints
 - Vulnerable to brute force and DoS attacks
 
 #### Recommendations:
+
 ```javascript
 const rateLimit = require('express-rate-limit');
 
@@ -52,7 +60,7 @@ const rateLimit = require('express-rate-limit');
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 100, // limit each IP to 100 requests per windowMs
-  message: 'Too many requests from this IP, please try again later.'
+  message: 'Too many requests from this IP, please try again later.',
 });
 
 // Authentication rate limiting
@@ -60,7 +68,7 @@ const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 5, // limit each IP to 5 requests per windowMs
   message: 'Too many authentication attempts, please try again later.',
-  skipSuccessfulRequests: true
+  skipSuccessfulRequests: true,
 });
 
 // Apply rate limiting
@@ -71,10 +79,12 @@ app.use('/auth/', authLimiter);
 ### 3. CORS Configuration
 
 #### Current Issues:
+
 - No explicit CORS configuration
 - Potential for cross-origin attacks
 
 #### Recommendations:
+
 ```javascript
 const cors = require('cors');
 
@@ -88,7 +98,7 @@ const corsOptions = {
       'http://localhost:3000',
       'http://localhost:3001',
       'https://yourdomain.com',
-      'https://www.yourdomain.com'
+      'https://www.yourdomain.com',
     ];
 
     if (allowedOrigins.indexOf(origin) !== -1) {
@@ -98,7 +108,7 @@ const corsOptions = {
     }
   },
   credentials: true,
-  optionsSuccessStatus: 200
+  optionsSuccessStatus: 200,
 };
 
 app.use(cors(corsOptions));
@@ -107,43 +117,49 @@ app.use(cors(corsOptions));
 ### 4. Security Headers
 
 #### Current Issues:
+
 - No security headers set
 - Vulnerable to various web attacks
 
 #### Recommendations:
+
 ```javascript
 const helmet = require('helmet');
 
 // Add security headers
-app.use(helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      styleSrc: ["'self'", "'unsafe-inline'"],
-      scriptSrc: ["'self'"],
-      imgSrc: ["'self'", "data:", "https:"],
-      connectSrc: ["'self'", "https://*.clerk.accounts.dev"],
-      fontSrc: ["'self'", "https:", "data:"],
-      objectSrc: ["'none'"],
-      mediaSrc: ["'self'"],
-      frameSrc: ["'none'"]
-    }
-  },
-  hsts: {
-    maxAge: 31536000,
-    includeSubDomains: true,
-    preload: true
-  }
-}));
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        styleSrc: ["'self'", "'unsafe-inline'"],
+        scriptSrc: ["'self'"],
+        imgSrc: ["'self'", 'data:', 'https:'],
+        connectSrc: ["'self'", 'https://*.clerk.accounts.dev'],
+        fontSrc: ["'self'", 'https:', 'data:'],
+        objectSrc: ["'none'"],
+        mediaSrc: ["'self'"],
+        frameSrc: ["'none'"],
+      },
+    },
+    hsts: {
+      maxAge: 31536000,
+      includeSubDomains: true,
+      preload: true,
+    },
+  })
+);
 ```
 
 ### 5. Authentication Security Enhancements
 
 #### Current Issues:
+
 - Basic session validation
 - No additional security checks
 
 #### Recommendations:
+
 ```javascript
 // Enhanced authentication middleware with additional security checks
 const enhancedAuthMiddleware = async (req, res, next) => {
@@ -179,7 +195,10 @@ const enhancedAuthMiddleware = async (req, res, next) => {
     }
 
     // Check if user account is active
-    if (clerkUser.banned || !clerkUser.emailAddresses.some(email => email.verification.status === 'verified')) {
+    if (
+      clerkUser.banned ||
+      !clerkUser.emailAddresses.some((email) => email.verification.status === 'verified')
+    ) {
       return res.status(401).json({ error: 'Unauthorized: User account not active' });
     }
 
@@ -190,7 +209,7 @@ const enhancedAuthMiddleware = async (req, res, next) => {
     req.user = {
       ...localUser,
       clerkUser,
-      sessionId: session.id
+      sessionId: session.id,
     };
 
     next();
@@ -204,10 +223,12 @@ const enhancedAuthMiddleware = async (req, res, next) => {
 ### 6. Data Security
 
 #### Current Issues:
+
 - Sensitive data stored without encryption
 - No data access controls
 
 #### Recommendations:
+
 ```javascript
 // Add encryption for sensitive data
 const crypto = require('crypto');
@@ -231,7 +252,7 @@ class DataEncryption {
     return {
       encrypted,
       iv: iv.toString('hex'),
-      authTag: authTag.toString('hex')
+      authTag: authTag.toString('hex'),
     };
   }
 
@@ -251,17 +272,21 @@ const dataEncryption = new DataEncryption();
 ### 7. API Security
 
 #### Current Issues:
+
 - No request size limits
 - No protection against common attacks
 
 #### Recommendations:
+
 ```javascript
 // Add request size limits and protection
-app.use(express.json({
-  limit: '10mb',
-  // Prevent prototype pollution
-  strict: true
-}));
+app.use(
+  express.json({
+    limit: '10mb',
+    // Prevent prototype pollution
+    strict: true,
+  })
+);
 
 // Add protection against common attacks
 app.use((req, res, next) => {
@@ -280,10 +305,12 @@ app.use((req, res, next) => {
 ### 8. Logging and Monitoring
 
 #### Current Issues:
+
 - Basic error logging
 - No security event monitoring
 
 #### Recommendations:
+
 ```javascript
 const winston = require('winston');
 
@@ -291,9 +318,7 @@ const winston = require('winston');
 const securityLogger = winston.createLogger({
   level: 'info',
   format: winston.format.json(),
-  transports: [
-    new winston.transports.File({ filename: 'security.log' })
-  ]
+  transports: [new winston.transports.File({ filename: 'security.log' })],
 });
 
 // Log security events
@@ -304,7 +329,7 @@ const logSecurityEvent = (event, details) => {
     details,
     userAgent: req.get('User-Agent'),
     ip: req.ip,
-    userId: req.user?.id
+    userId: req.user?.id,
   });
 };
 
@@ -328,10 +353,12 @@ router.post('/login', authLimiter, async (req, res) => {
 ### 9. Dependency Security
 
 #### Current Issues:
+
 - No dependency vulnerability scanning
 - No security audit process
 
 #### Recommendations:
+
 ```bash
 # Add security audit to package.json scripts
 {
@@ -350,10 +377,12 @@ npm run security:audit
 ### 10. Environment Security
 
 #### Current Issues:
+
 - Environment variables not properly secured
 - No secret management
 
 #### Recommendations:
+
 ```javascript
 // Enhanced environment validation
 class SecureEnvConfig {
@@ -364,19 +393,18 @@ class SecureEnvConfig {
 
   validateEnvironment() {
     // Validate required environment variables
-    const requiredVars = [
-      'DATABASE_URL',
-      'CLERK_SECRET_KEY',
-      'ENCRYPTION_KEY'
-    ];
+    const requiredVars = ['DATABASE_URL', 'CLERK_SECRET_KEY', 'ENCRYPTION_KEY'];
 
-    const missingVars = requiredVars.filter(varName => !process.env[varName]);
+    const missingVars = requiredVars.filter((varName) => !process.env[varName]);
     if (missingVars.length > 0) {
       throw new Error(`Missing required environment variables: ${missingVars.join(', ')}`);
     }
 
     // Validate sensitive environment variables
-    if (process.env.NODE_ENV === 'production' && process.env.CLERK_SECRET_KEY === 'YOUR_CLERK_SECRET_KEY') {
+    if (
+      process.env.NODE_ENV === 'production' &&
+      process.env.CLERK_SECRET_KEY === 'YOUR_CLERK_SECRET_KEY'
+    ) {
       throw new Error('Invalid Clerk secret key in production');
     }
   }
@@ -392,6 +420,7 @@ class SecureEnvConfig {
 ## Security Testing Implementation
 
 ### 1. Automated Security Testing
+
 ```javascript
 // Add security tests to test suite
 describe('Security Tests', () => {
@@ -425,6 +454,7 @@ describe('Security Tests', () => {
 ```
 
 ### 2. Manual Security Testing Checklist
+
 - [ ] Test SQL injection attempts
 - [ ] Test XSS attacks
 - [ ] Test CSRF protection
@@ -439,6 +469,7 @@ describe('Security Tests', () => {
 ## Production Security Hardening
 
 ### 1. Infrastructure Security
+
 - Use HTTPS in production
 - Implement proper firewall rules
 - Use secure database connections
@@ -446,6 +477,7 @@ describe('Security Tests', () => {
 - Use container security best practices
 
 ### 2. Application Security
+
 - Regular security audits
 - Dependency vulnerability scanning
 - Penetration testing
@@ -455,6 +487,7 @@ describe('Security Tests', () => {
 ## Conclusion
 
 These security enhancements will significantly improve the security posture of the JobNaut application by:
+
 1. Adding proper input validation and sanitization
 2. Implementing rate limiting to prevent abuse
 3. Configuring CORS properly

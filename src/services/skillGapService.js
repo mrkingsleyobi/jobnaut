@@ -16,33 +16,31 @@ class SkillGapService {
    */
   calculateSkillGaps(userSkills = [], jobSkills = []) {
     // Normalize skills to lowercase for comparison
-    const normalizedUserSkills = userSkills.map(skill => skill.toLowerCase().trim());
-    const normalizedJobSkills = jobSkills.map(skill => skill.toLowerCase().trim());
+    const normalizedUserSkills = userSkills.map((skill) => skill.toLowerCase().trim());
+    const normalizedJobSkills = jobSkills.map((skill) => skill.toLowerCase().trim());
 
     // Find missing skills (skills required for job but user doesn't have)
-    const missingSkills = normalizedJobSkills.filter(skill =>
-      !normalizedUserSkills.includes(skill)
+    const missingSkills = normalizedJobSkills.filter(
+      (skill) => !normalizedUserSkills.includes(skill)
     );
 
     // Find matching skills (skills user has that are also required for job)
-    const matchingSkills = normalizedJobSkills.filter(skill =>
+    const matchingSkills = normalizedJobSkills.filter((skill) =>
       normalizedUserSkills.includes(skill)
     );
 
     // Find excess skills (skills user has but job doesn't require)
-    const excessSkills = normalizedUserSkills.filter(skill =>
-      !normalizedJobSkills.includes(skill)
+    const excessSkills = normalizedUserSkills.filter(
+      (skill) => !normalizedJobSkills.includes(skill)
     );
 
     // Calculate match percentage
-    const matchPercentage = jobSkills.length > 0
-      ? Math.round((matchingSkills.length / jobSkills.length) * 100)
-      : 0;
+    const matchPercentage =
+      jobSkills.length > 0 ? Math.round((matchingSkills.length / jobSkills.length) * 100) : 0;
 
     // Calculate gap score (0-100, where 100 means no gaps)
-    const gapScore = jobSkills.length > 0
-      ? Math.round((matchingSkills.length / jobSkills.length) * 100)
-      : 100;
+    const gapScore =
+      jobSkills.length > 0 ? Math.round((matchingSkills.length / jobSkills.length) * 100) : 100;
 
     return {
       matchingSkills: matchingSkills,
@@ -54,7 +52,7 @@ class SkillGapService {
       userSkillsCount: userSkills.length,
       matchingSkillsCount: matchingSkills.length,
       missingSkillsCount: missingSkills.length,
-      excessSkillsCount: excessSkills.length
+      excessSkillsCount: excessSkills.length,
     };
   }
 
@@ -99,8 +97,8 @@ class SkillGapService {
           jobSkills: jobSkills,
           userSkills: userSkills,
           ...gapAnalysis,
-          recommendations: this.generateRecommendations(gapAnalysis)
-        }
+          recommendations: this.generateRecommendations(gapAnalysis),
+        },
       };
     } catch (error) {
       console.error('Error getting skill gap analysis for job:', error.message);
@@ -133,7 +131,7 @@ class SkillGapService {
 
       return {
         success: true,
-        data: analyses
+        data: analyses,
       };
     } catch (error) {
       console.error('Error getting skill gap analyses for jobs:', error.message);
@@ -159,7 +157,7 @@ class SkillGapService {
         skills: gapAnalysis.missingSkills,
         estimatedTime: `${gapAnalysis.missingSkillsCount * 20}-${
           gapAnalysis.missingSkillsCount * 40
-        } hours`
+        } hours`,
       });
     }
 
@@ -171,7 +169,7 @@ class SkillGapService {
         title: 'Strengthen foundational skills',
         description: 'Build a stronger foundation in core skills for your target career',
         skills: gapAnalysis.jobSkills.slice(0, 3),
-        estimatedTime: '40-80 hours'
+        estimatedTime: '40-80 hours',
       });
     }
 
@@ -183,7 +181,7 @@ class SkillGapService {
         title: 'Develop advanced expertise',
         description: 'Enhance your skills with advanced topics to stand out',
         skills: gapAnalysis.missingSkills.slice(0, 2),
-        estimatedTime: '20-60 hours'
+        estimatedTime: '20-60 hours',
       });
     }
 
@@ -232,7 +230,7 @@ class SkillGapService {
             jobCompany: job.company,
             gapScore: gapAnalysis.gapScore,
             missingSkillsCount: gapAnalysis.missingSkillsCount,
-            matchingSkillsCount: gapAnalysis.matchingSkillsCount
+            matchingSkillsCount: gapAnalysis.matchingSkillsCount,
           });
         } catch (error) {
           console.warn(`Failed to analyze job ${job.id}:`, error.message);
@@ -243,7 +241,7 @@ class SkillGapService {
 
       // Identify most common missing skills
       const skillFrequency = {};
-      jobAnalyses.forEach(analysis => {
+      jobAnalyses.forEach((analysis) => {
         // This would require more detailed analysis of individual job gaps
       });
 
@@ -256,8 +254,8 @@ class SkillGapService {
           jobCount: jobCount,
           jobAnalyses: jobAnalyses,
           overallAssessment: this.getOverallAssessment(averageGapScore),
-          recommendations: this.getOverallRecommendations(averageGapScore, userSkills)
-        }
+          recommendations: this.getOverallRecommendations(averageGapScore, userSkills),
+        },
       };
     } catch (error) {
       console.error('Error getting overall skill gap analysis:', error.message);
@@ -274,7 +272,7 @@ class SkillGapService {
     if (averageGapScore >= 80) {
       return 'Excellent! You have most of the skills needed for jobs in your field.';
     } else if (averageGapScore >= 60) {
-      return 'Good! You have many of the required skills, but there\'s room for improvement.';
+      return "Good! You have many of the required skills, but there's room for improvement.";
     } else if (averageGapScore >= 40) {
       return 'Fair! You have some relevant skills, but significant gaps remain.';
     } else {
@@ -297,7 +295,7 @@ class SkillGapService {
         priority: 'high',
         title: 'Focus on foundational skills',
         description: 'Build a strong foundation in core skills for your target career',
-        estimatedTime: '80-160 hours'
+        estimatedTime: '80-160 hours',
       });
     } else if (averageGapScore < 80) {
       recommendations.push({
@@ -305,7 +303,7 @@ class SkillGapService {
         priority: 'medium',
         title: 'Target specific skill gaps',
         description: 'Focus on the most common missing skills across job opportunities',
-        estimatedTime: '40-120 hours'
+        estimatedTime: '40-120 hours',
       });
     } else {
       recommendations.push({
@@ -313,7 +311,7 @@ class SkillGapService {
         priority: 'low',
         title: 'Develop expertise',
         description: 'Enhance your skills with advanced topics to stand out in the job market',
-        estimatedTime: '40-100 hours'
+        estimatedTime: '40-100 hours',
       });
     }
 

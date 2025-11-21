@@ -4,10 +4,10 @@ class ChatService {
     // Use the runtime config for the API base URL
     // In test environment, use default values
     if (typeof useRuntimeConfig !== 'undefined') {
-      const config = useRuntimeConfig()
-      this.baseUrl = config.public.apiBase || 'http://localhost:3001/api'
+      const config = useRuntimeConfig();
+      this.baseUrl = config.public.apiBase || 'http://localhost:3001/api';
     } else {
-      this.baseUrl = 'http://localhost:3001/api'
+      this.baseUrl = 'http://localhost:3001/api';
     }
   }
 
@@ -20,9 +20,8 @@ class ChatService {
     try {
       // In a real implementation, this would use the actual authentication token
       // For now, we're using a placeholder to test the API
-      const authToken = typeof localStorage !== 'undefined'
-        ? localStorage.getItem('authToken')
-        : null;
+      const authToken =
+        typeof localStorage !== 'undefined' ? localStorage.getItem('authToken') : null;
 
       const headers = {
         'Content-Type': 'application/json',
@@ -34,19 +33,22 @@ class ChatService {
 
       const response = await fetch(`${this.baseUrl}/v1/chat/history/${userId}`, {
         method: 'GET',
-        headers
-      })
+        headers,
+      });
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      const result = await response.json()
-      return result.data
+      const result = await response.json();
+      return result.data;
     } catch (error) {
-      console.warn('Warning: Could not fetch conversation history - chat service may be unavailable:', error.message)
+      console.warn(
+        'Warning: Could not fetch conversation history - chat service may be unavailable:',
+        error.message
+      );
       // Return empty array as fallback
-      return []
+      return [];
     }
   }
 
@@ -60,9 +62,8 @@ class ChatService {
     try {
       // In a real implementation, this would use the actual authentication token
       // For now, we're using a placeholder to test the API
-      const authToken = typeof localStorage !== 'undefined'
-        ? localStorage.getItem('authToken')
-        : null;
+      const authToken =
+        typeof localStorage !== 'undefined' ? localStorage.getItem('authToken') : null;
 
       const headers = {
         'Content-Type': 'application/json',
@@ -75,24 +76,27 @@ class ChatService {
       const response = await fetch(`${this.baseUrl}/v1/chat/message`, {
         method: 'POST',
         headers,
-        body: JSON.stringify({ userId, message })
-      })
+        body: JSON.stringify({ userId, message }),
+      });
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      const result = await response.json()
-      return result.data.aiMessage
+      const result = await response.json();
+      return result.data.aiMessage;
     } catch (error) {
-      console.warn('Warning: Could not send message - chat service may be unavailable:', error.message)
+      console.warn(
+        'Warning: Could not send message - chat service may be unavailable:',
+        error.message
+      );
       // Return fallback response
       return {
         id: Date.now(),
         role: 'assistant',
-        content: 'Sorry, I\'m currently unavailable. Please try again later.',
-        createdAt: new Date().toISOString()
-      }
+        content: "Sorry, I'm currently unavailable. Please try again later.",
+        createdAt: new Date().toISOString(),
+      };
     }
   }
 
@@ -105,9 +109,8 @@ class ChatService {
     try {
       // In a real implementation, this would use the actual authentication token
       // For now, we're using a placeholder to test the API
-      const authToken = typeof localStorage !== 'undefined'
-        ? localStorage.getItem('authToken')
-        : null;
+      const authToken =
+        typeof localStorage !== 'undefined' ? localStorage.getItem('authToken') : null;
 
       const headers = {
         'Content-Type': 'application/json',
@@ -119,22 +122,25 @@ class ChatService {
 
       const response = await fetch(`${this.baseUrl}/v1/chat/history/${userId}`, {
         method: 'DELETE',
-        headers
-      })
+        headers,
+      });
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      const result = await response.json()
-      return result
+      const result = await response.json();
+      return result;
     } catch (error) {
-      console.warn('Warning: Could not clear conversation history - chat service may be unavailable:', error.message)
+      console.warn(
+        'Warning: Could not clear conversation history - chat service may be unavailable:',
+        error.message
+      );
       // Don't throw error to prevent breaking the UI
-      return { success: true }
+      return { success: true };
     }
   }
 }
 
 // Export a singleton instance
-export default new ChatService()
+export default new ChatService();

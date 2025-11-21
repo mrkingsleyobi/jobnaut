@@ -9,7 +9,7 @@ jest.mock('../../src/api/server', () => ({
   createTRPCExpressMiddleware: () => (req, res, next) => {
     // Mock implementation that just continues to the next handler
     next();
-  }
+  },
 }));
 
 describe('Main API Endpoints', () => {
@@ -27,7 +27,7 @@ describe('Main API Endpoints', () => {
       expect(response.body).toEqual({
         status: 'OK',
         timestamp: expect.any(String),
-        service: 'JobNaut API'
+        service: 'JobNaut API',
       });
       expect(response.body.timestamp).toMatch(/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z/);
     });
@@ -47,8 +47,8 @@ describe('Main API Endpoints', () => {
         endpoints: {
           rest: '/api/v1/*',
           trpc: '/trpc/*',
-          health: '/health'
-        }
+          health: '/health',
+        },
       });
     });
   });
@@ -71,7 +71,7 @@ describe('Main API Endpoints', () => {
       // Assert
       expect(response.status).toBe(404);
       expect(response.body).toEqual({
-        error: 'Not found'
+        error: 'Not found',
       });
     });
   });
@@ -84,8 +84,8 @@ describe('Main API Endpoints', () => {
       // The app should have middleware functions including error handlers
       // Express apps typically have 4-argument functions for error handling
       const middlewareStack = app._router.stack;
-      const errorHandlers = middlewareStack.filter(layer =>
-        layer.handle.length === 4 // Error handling middleware has 4 parameters (err, req, res, next)
+      const errorHandlers = middlewareStack.filter(
+        (layer) => layer.handle.length === 4 // Error handling middleware has 4 parameters (err, req, res, next)
       );
 
       expect(errorHandlers.length).toBeGreaterThan(0);

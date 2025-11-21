@@ -5,64 +5,122 @@ services:
   database:
     image: postgres:15-alpine
     container_name: jobnaut-db-prod
+    secrets:
+      - db_user
+      - db_password
+      - db_name
     environment:
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-      POSTGRES_DB: ${DB_NAME}
-    ports:
-      - "5432:5432"
+      POSTGRES_USER_FILE: /run/secrets/db_user
+      POSTGRES_PASSWORD_FILE: /run/secrets/db_password
+      POSTGRES_DB_FILE: /run/secrets/db_name
+    # Database should NOT be exposed to host - only accessible within Docker network
+    # ports:
+    #   - "5432:5432"  # REMOVED FOR SECURITY
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
       interval: 10s
       timeout: 5s
       retries: 5
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
 
   # Backend API Service
   backend:
     image: jobnaut/backend:latest
     container_name: jobnaut-backend-prod
     ports:
-      - "3000:3000"
+      - '3000:3000'
+    secrets:
+      - db_user
+      - db_password
+      - db_name
+      - clerk_secret_key
+      - encryption_key
     environment:
-      - DATABASE_URL=postgresql://${DB_USER}:${DB_PASSWORD}@database:5432/${DB_NAME}
       - NODE_ENV=production
       - PORT=3000
-      - CLERK_SECRET_KEY=${CLERK_SECRET_KEY}
-      - ENCRYPTION_KEY=${ENCRYPTION_KEY}
+      # Database URL constructed from secrets at runtime
+      - DATABASE_URL=postgresql://$(cat /run/secrets/db_user):$(cat /run/secrets/db_password)@database:5432/$(cat /run/secrets/db_name)
     depends_on:
       database:
         condition: service_healthy
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
 
   # Frontend Service
   frontend:
     image: jobnaut/frontend:latest
     container_name: jobnaut-frontend-prod
     ports:
-      - "3001:3000"
+      - '3001:80'
     environment:
       - NODE_ENV=production
       - API_BASE_URL=http://backend:3000
     depends_on:
       - backend
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G
+        reservations:
+          cpus: '0.25'
+          memory: 256M
 
   # Meilisearch Service
   meilisearch:
     image: getmeili/meilisearch:v1.13
     container_name: jobnaut-meilisearch-prod
     ports:
-      - "7700:7700"
+      - '7700:7700'
+    secrets:
+      - meili_master_key
     environment:
-      - MEILI_MASTER_KEY=${MEILI_MASTER_KEY}
+      - MEILI_MASTER_KEY_FILE=/run/secrets/meili_master_key
       - MEILI_ENV=production
     volumes:
       - meilisearch_data:/meili_data
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G
+        reservations:
+          cpus: '0.25'
+          memory: 256M
 
 volumes:
   postgres_data:
   meilisearch_data:
+
+secrets:
+  db_user:
+    file: ./secrets/db_user.txt
+  db_password:
+    file: ./secrets/db_password.txt
+  db_name:
+    file: ./secrets/db_name.txt
+  clerk_secret_key:
+    file: ./secrets/clerk_secret_key.txt
+  encryption_key:
+    file: ./secrets/encryption_key.txt
+  meili_master_key:
+    file: ./secrets/meili_master_key.txt

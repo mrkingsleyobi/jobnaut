@@ -9,6 +9,15 @@ const securityLogger = require('./securityLogger');
  */
 class UserProfileService {
   /**
+   * Get user profile (alias for getProfile)
+   * @param {number} userId - User ID
+   * @returns {Promise<Object>} User profile data
+   */
+  async getUserProfile(userId) {
+    return this.getProfile(userId);
+  }
+
+  /**
    * Get user profile
    * @param {number} userId - User ID
    * @returns {Promise<Object>} User profile data
@@ -17,7 +26,7 @@ class UserProfileService {
     // Log data access event
     securityLogger.logDataAccess('user_profile', {
       userId: userId,
-      action: 'read'
+      action: 'read',
     });
 
     const user = await userService.getUserById(userId);
@@ -27,7 +36,7 @@ class UserProfileService {
       securityLogger.logAccessControl('user_profile', 'read', {
         userId: userId,
         allowed: false,
-        reason: 'User not found'
+        reason: 'User not found',
       });
       throw new Error('User not found');
     }
@@ -36,7 +45,7 @@ class UserProfileService {
     securityLogger.logAccessControl('user_profile', 'read', {
       userId: userId,
       targetUserId: user.id,
-      allowed: true
+      allowed: true,
     });
 
     // The user service now handles decryption, so we can return the user directly
@@ -64,7 +73,7 @@ class UserProfileService {
     securityLogger.logDataAccess('user_profile', {
       userId: userId,
       action: 'update',
-      fields: Object.keys(profileData)
+      fields: Object.keys(profileData),
     });
 
     // Validate and sanitize input data
@@ -91,7 +100,7 @@ class UserProfileService {
           userId: userId,
           field: 'skills',
           reason: 'Skills must be an array',
-          providedType: typeof profileData.skills
+          providedType: typeof profileData.skills,
         });
         throw new Error('Skills must be an array');
       }
@@ -105,7 +114,7 @@ class UserProfileService {
         userId: userId,
         targetUserId: updatedUser.id,
         allowed: true,
-        fields: Object.keys(updateData)
+        fields: Object.keys(updateData),
       });
 
       return {
@@ -124,7 +133,7 @@ class UserProfileService {
       securityLogger.logAccessControl('user_profile', 'update', {
         userId: userId,
         allowed: false,
-        reason: error.message
+        reason: error.message,
       });
       throw error;
     }
@@ -141,7 +150,7 @@ class UserProfileService {
     securityLogger.logDataAccess('user_skills', {
       userId: userId,
       action: 'add',
-      skillsCount: newSkills ? newSkills.length : 0
+      skillsCount: newSkills ? newSkills.length : 0,
     });
 
     // Get current user profile
@@ -151,7 +160,7 @@ class UserProfileService {
       securityLogger.logAccessControl('user_skills', 'add', {
         userId: userId,
         allowed: false,
-        reason: 'User not found'
+        reason: 'User not found',
       });
       throw new Error('User not found');
     }
@@ -169,7 +178,7 @@ class UserProfileService {
       userId: userId,
       targetUserId: updatedUser.id,
       allowed: true,
-      skillsCount: allSkills.length
+      skillsCount: allSkills.length,
     });
 
     return {
@@ -196,7 +205,7 @@ class UserProfileService {
     securityLogger.logDataAccess('user_skills', {
       userId: userId,
       action: 'remove',
-      skillsCount: skillsToRemove ? skillsToRemove.length : 0
+      skillsCount: skillsToRemove ? skillsToRemove.length : 0,
     });
 
     // Get current user profile
@@ -206,14 +215,14 @@ class UserProfileService {
       securityLogger.logAccessControl('user_skills', 'remove', {
         userId: userId,
         allowed: false,
-        reason: 'User not found'
+        reason: 'User not found',
       });
       throw new Error('User not found');
     }
 
     // Remove specified skills
     const updatedSkills = (currentUser.skills || []).filter(
-      skill => !skillsToRemove.includes(skill)
+      (skill) => !skillsToRemove.includes(skill)
     );
 
     // Update user with new skills
@@ -226,7 +235,7 @@ class UserProfileService {
       userId: userId,
       targetUserId: updatedUser.id,
       allowed: true,
-      skillsCount: updatedSkills.length
+      skillsCount: updatedSkills.length,
     });
 
     return {

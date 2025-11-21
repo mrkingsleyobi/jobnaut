@@ -2,6 +2,7 @@
 // Handles encryption and decryption of sensitive user data
 
 const crypto = require('crypto');
+const logger = require('../utils/logger');
 
 /**
  * Encryption service for sensitive data
@@ -44,10 +45,10 @@ class EncryptionService {
       return {
         data: encrypted,
         iv: iv.toString('hex'),
-        tag: authTag.toString('hex')
+        tag: authTag.toString('hex'),
       };
     } catch (error) {
-      console.error('Encryption error:', error);
+      logger.error('Encryption error', { error: error.message, stack: error.stack });
       throw new Error('Failed to encrypt data');
     }
   }
@@ -70,7 +71,7 @@ class EncryptionService {
 
       return decrypted;
     } catch (error) {
-      console.error('Decryption error:', error);
+      logger.error('Decryption error', { error: error.message, stack: error.stack });
       throw new Error('Failed to decrypt data');
     }
   }
@@ -124,7 +125,10 @@ class EncryptionService {
       decryptedData.location = this.decrypt(encryptedUserData.location);
     }
 
-    if (encryptedUserData.experienceLevel && typeof encryptedUserData.experienceLevel === 'object') {
+    if (
+      encryptedUserData.experienceLevel &&
+      typeof encryptedUserData.experienceLevel === 'object'
+    ) {
       decryptedData.experienceLevel = this.decrypt(encryptedUserData.experienceLevel);
     }
 

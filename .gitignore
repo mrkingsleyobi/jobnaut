@@ -122,7 +122,6 @@ tmp/
 temp/
 
 # Package lock files
-package-lock.json
 yarn.lock
 
 # Python
@@ -406,3 +405,4 @@ vite.config.*.timestamp-*.*
 # Production environment files
 .env.production
 frontend/.env.production
+secrets/

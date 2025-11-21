@@ -37,6 +37,7 @@ git commit -m "security: Remove production credentials from repository"
 ```
 
 **Verification:**
+
 ```bash
 # Ensure no secrets in current commit
 git log --all --full-history --source -- '*.env*'
@@ -60,6 +61,7 @@ git grep -i "password\|secret\|key" -- "*.env*"
 ```
 
 **File:** `docker-compose.prod.yml`
+
 ```yaml
 database:
   image: postgres:15-alpine
@@ -71,11 +73,11 @@ database:
   # ❌ REMOVE ports section
   # ✅ ADD expose instead
   expose:
-    - "5432"  # Only accessible within Docker network
+    - '5432' # Only accessible within Docker network
   volumes:
     - postgres_data:/var/lib/postgresql/data
   healthcheck:
-    test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+    test: ['CMD-SHELL', 'pg_isready -U ${DB_USER} -d ${DB_NAME}']
     interval: 10s
     timeout: 5s
     retries: 5
@@ -117,6 +119,7 @@ git commit -m "chore: Track package lock files for reproducible builds"
 ```
 
 **Phase 1 Checklist:**
+
 - [ ] Credentials removed from git
 - [ ] All secrets rotated
 - [ ] Database port fixed
@@ -133,6 +136,7 @@ git commit -m "chore: Track package lock files for reproducible builds"
 #### Task 2.1: Choose Secrets Management Solution
 
 **Options:**
+
 - AWS Secrets Manager (recommended for AWS)
 - HashiCorp Vault (self-hosted or cloud)
 - Azure Key Vault (for Azure)
@@ -230,6 +234,7 @@ exec "$@"
 ```
 
 Make executable:
+
 ```bash
 chmod +x scripts/load-secrets.sh
 ```
@@ -257,6 +262,7 @@ Update `.github/workflows/deploy.yml`:
 ```
 
 **Phase 2 Checklist:**
+
 - [ ] Secrets management solution chosen
 - [ ] All secrets created in secret store
 - [ ] Secret loading script created
@@ -349,7 +355,7 @@ class EnvConfig {
       'CORS_ALLOWED_ORIGINS',
     ];
 
-    const missingVars = requiredVars.filter(varName => !process.env[varName]);
+    const missingVars = requiredVars.filter((varName) => !process.env[varName]);
 
     if (missingVars.length > 0) {
       if (process.env.NODE_ENV === 'production') {
@@ -384,7 +390,7 @@ class EnvConfig {
     if (!origins) {
       throw new Error('CORS_ALLOWED_ORIGINS not configured');
     }
-    return origins.split(',').map(o => o.trim());
+    return origins.split(',').map((o) => o.trim());
   }
 
   // ... rest of existing methods
@@ -411,7 +417,7 @@ const corsOptions = {
     }
   },
   credentials: true,
-  optionsSuccessStatus: 200
+  optionsSuccessStatus: 200,
 };
 
 app.use(cors(corsOptions));
@@ -435,7 +441,7 @@ if (envConfig.isProduction()) {
 
   // Secure cookie configuration
   app.use((req, res, next) => {
-    res.cookie = function(name, value, options) {
+    res.cookie = function (name, value, options) {
       options = options || {};
       options.secure = true;
       options.httpOnly = true;
@@ -448,6 +454,7 @@ if (envConfig.isProduction()) {
 ```
 
 **Phase 3 Checklist:**
+
 - [ ] Environment template created
 - [ ] Environment validation enhanced
 - [ ] CORS configuration fixed
@@ -472,8 +479,8 @@ npm install @sentry/node @sentry/tracing
 Create `/home/user/jobnaut/src/monitoring/sentry.js`:
 
 ```javascript
-const Sentry = require("@sentry/node");
-const Tracing = require("@sentry/tracing");
+const Sentry = require('@sentry/node');
+const Tracing = require('@sentry/tracing');
 
 const initSentry = (app) => {
   if (process.env.NODE_ENV === 'production' && process.env.SENTRY_DSN) {
@@ -531,7 +538,7 @@ const prisma = new PrismaClient();
 router.get('/health/live', (req, res) => {
   res.json({
     status: 'alive',
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   });
 });
 
@@ -543,13 +550,13 @@ router.get('/health/ready', async (req, res) => {
 
     res.json({
       status: 'ready',
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   } catch (error) {
     res.status(503).json({
       status: 'not ready',
       error: error.message,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   }
 });
@@ -561,7 +568,7 @@ router.get('/health', async (req, res) => {
     timestamp: new Date().toISOString(),
     uptime: process.uptime(),
     environment: process.env.NODE_ENV,
-    checks: {}
+    checks: {},
   };
 
   // Database check
@@ -570,12 +577,12 @@ router.get('/health', async (req, res) => {
     await prisma.$queryRaw`SELECT 1`;
     health.checks.database = {
       status: 'healthy',
-      latency: Date.now() - start + 'ms'
+      latency: Date.now() - start + 'ms',
     };
   } catch (error) {
     health.checks.database = {
       status: 'unhealthy',
-      error: error.message
+      error: error.message,
     };
     health.status = 'unhealthy';
   }
@@ -584,7 +591,7 @@ router.get('/health', async (req, res) => {
   try {
     const response = await fetch(process.env.MEILISEARCH_HOST + '/health');
     health.checks.meilisearch = {
-      status: response.ok ? 'healthy' : 'degraded'
+      status: response.ok ? 'healthy' : 'degraded',
     };
     if (!response.ok) {
       health.status = 'degraded';
@@ -592,7 +599,7 @@ router.get('/health', async (req, res) => {
   } catch (error) {
     health.checks.meilisearch = {
       status: 'unhealthy',
-      error: error.message
+      error: error.message,
     };
     health.status = 'degraded';
   }
@@ -630,7 +637,7 @@ const register = new promClient.Registry();
 // Collect default metrics
 promClient.collectDefaultMetrics({
   register,
-  prefix: 'jobnaut_'
+  prefix: 'jobnaut_',
 });
 
 // Custom metrics
@@ -638,19 +645,19 @@ const httpRequestDuration = new promClient.Histogram({
   name: 'jobnaut_http_request_duration_seconds',
   help: 'Duration of HTTP requests in seconds',
   labelNames: ['method', 'route', 'status_code'],
-  buckets: [0.1, 0.3, 0.5, 0.7, 1, 3, 5, 7, 10]
+  buckets: [0.1, 0.3, 0.5, 0.7, 1, 3, 5, 7, 10],
 });
 
 const httpRequestTotal = new promClient.Counter({
   name: 'jobnaut_http_requests_total',
   help: 'Total number of HTTP requests',
-  labelNames: ['method', 'route', 'status_code']
+  labelNames: ['method', 'route', 'status_code'],
 });
 
 const httpRequestErrors = new promClient.Counter({
   name: 'jobnaut_http_request_errors_total',
   help: 'Total number of HTTP request errors',
-  labelNames: ['method', 'route', 'error_type']
+  labelNames: ['method', 'route', 'error_type'],
 });
 
 register.registerMetric(httpRequestDuration);
@@ -665,13 +672,9 @@ const metricsMiddleware = (req, res, next) => {
     const duration = (Date.now() - start) / 1000;
     const route = req.route ? req.route.path : req.path;
 
-    httpRequestDuration
-      .labels(req.method, route, res.statusCode)
-      .observe(duration);
+    httpRequestDuration.labels(req.method, route, res.statusCode).observe(duration);
 
-    httpRequestTotal
-      .labels(req.method, route, res.statusCode)
-      .inc();
+    httpRequestTotal.labels(req.method, route, res.statusCode).inc();
 
     if (res.statusCode >= 400) {
       httpRequestErrors
@@ -697,7 +700,7 @@ const metricsHandler = async (req, res) => {
 module.exports = {
   metricsMiddleware,
   metricsHandler,
-  register
+  register,
 };
 ```
 
@@ -734,7 +737,7 @@ const fileRotateTransport = new winston.transports.DailyRotateFile({
   datePattern: 'YYYY-MM-DD',
   maxSize: '20m',
   maxFiles: '14d',
-  level: process.env.LOG_LEVEL || 'info'
+  level: process.env.LOG_LEVEL || 'info',
 });
 
 const errorRotateTransport = new winston.transports.DailyRotateFile({
@@ -742,7 +745,7 @@ const errorRotateTransport = new winston.transports.DailyRotateFile({
   datePattern: 'YYYY-MM-DD',
   maxSize: '20m',
   maxFiles: '30d',
-  level: 'error'
+  level: 'error',
 });
 
 const logger = winston.createLogger({
@@ -753,23 +756,20 @@ const logger = winston.createLogger({
     winston.format.json()
   ),
   defaultMeta: { service: 'jobnaut-api' },
-  transports: [
-    fileRotateTransport,
-    errorRotateTransport
-  ]
+  transports: [fileRotateTransport, errorRotateTransport],
 });
 
 if (envConfig.isDevelopment()) {
-  logger.add(new winston.transports.Console({
-    format: winston.format.combine(
-      winston.format.colorize(),
-      winston.format.simple()
-    )
-  }));
+  logger.add(
+    new winston.transports.Console({
+      format: winston.format.combine(winston.format.colorize(), winston.format.simple()),
+    })
+  );
 }
 ```
 
 **Phase 4 Checklist:**
+
 - [ ] Sentry configured and tested
 - [ ] Health checks implemented
 - [ ] Prometheus metrics added
@@ -851,6 +851,7 @@ echo "Backup completed at $(date)"
 ```
 
 Make executable:
+
 ```bash
 chmod +x scripts/backup-database.sh
 ```
@@ -879,7 +880,7 @@ services:
     volumes:
       - ./backups:/backups
       - ./scripts:/scripts
-      - ~/.aws:/root/.aws:ro  # AWS credentials for S3 upload
+      - ~/.aws:/root/.aws:ro # AWS credentials for S3 upload
     command: >
       sh -c "
       apk add --no-cache aws-cli &&
@@ -956,11 +957,13 @@ echo "Database restored and migrations applied"
 ```
 
 Make executable:
+
 ```bash
 chmod +x scripts/restore-database.sh
 ```
 
 **Phase 5 Checklist:**
+
 - [ ] Initial migration created
 - [ ] Backup script created and tested
 - [ ] Backup service added to Docker Compose
@@ -992,11 +995,11 @@ services:
     container_name: jobnaut-redis-prod
     command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
     ports:
-      - "6379:6379"
+      - '6379:6379'
     volumes:
       - redis_data:/data
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ['CMD', 'redis-cli', 'ping']
       interval: 10s
       timeout: 3s
       retries: 5
@@ -1023,8 +1026,8 @@ const client = redis.createClient({
         return new Error('Redis reconnection failed');
       }
       return Math.min(retries * 100, 3000);
-    }
-  }
+    },
+  },
 });
 
 client.on('error', (err) => logger.error('Redis error:', err));
@@ -1059,7 +1062,7 @@ const disconnectRedis = async () => {
 module.exports = {
   client,
   connectRedis,
-  disconnectRedis
+  disconnectRedis,
 };
 ```
 
@@ -1095,10 +1098,11 @@ const cacheMiddleware = (duration = 300) => {
       // Cache miss - intercept json response
       const originalJson = res.json.bind(res);
 
-      res.json = function(data) {
+      res.json = function (data) {
         // Cache the response
-        client.setEx(key, duration, JSON.stringify(data))
-          .catch(err => logger.error('Cache write error:', err));
+        client
+          .setEx(key, duration, JSON.stringify(data))
+          .catch((err) => logger.error('Cache write error:', err));
 
         logger.debug(`Cache set: ${key} (${duration}s)`);
         return originalJson(data);
@@ -1130,16 +1134,18 @@ Update `/home/user/jobnaut/src/server.js`:
 const compression = require('compression');
 
 // Add before other middleware
-app.use(compression({
-  filter: (req, res) => {
-    if (req.headers['x-no-compression']) {
-      return false;
-    }
-    return compression.filter(req, res);
-  },
-  level: 6,
-  threshold: 1024  // Only compress responses > 1KB
-}));
+app.use(
+  compression({
+    filter: (req, res) => {
+      if (req.headers['x-no-compression']) {
+        return false;
+      }
+      return compression.filter(req, res);
+    },
+    level: 6,
+    threshold: 1024, // Only compress responses > 1KB
+  })
+);
 ```
 
 #### Task 6.3: Configure Database Connection Pool
@@ -1156,11 +1162,13 @@ datasource db {
 ```
 
 Update production `DATABASE_URL`:
+
 ```
 postgresql://user:pass@host:5432/db?connection_limit=20&pool_timeout=30&connect_timeout=10
 ```
 
 **Phase 6 Checklist:**
+
 - [ ] Redis installed and configured
 - [ ] Cache middleware implemented
 - [ ] Compression added
@@ -1176,6 +1184,7 @@ postgresql://user:pass@host:5432/db?connection_limit=20&pool_timeout=30&connect_
 See detailed implementation in full report section 4.
 
 **Phase 7 Checklist:**
+
 - [ ] Deployment script implemented
 - [ ] Security scanning added
 - [ ] Dependency scanning configured
@@ -1217,6 +1226,7 @@ k6 run --vus 20 --duration 10m tests/load/api-load-test.js
 ```
 
 **Phase 8 Checklist:**
+
 - [ ] k6 installed
 - [ ] Load tests created
 - [ ] Baseline performance measured
@@ -1262,6 +1272,7 @@ docker scan jobnaut/frontend:latest
 ```
 
 **Phase 9 Checklist:**
+
 - [ ] Security audit completed
 - [ ] All vulnerabilities addressed
 - [ ] Penetration testing considered
@@ -1276,6 +1287,7 @@ docker scan jobnaut/frontend:latest
 #### Pre-Deployment Checklist
 
 **Infrastructure:**
+
 - [ ] Production servers provisioned
 - [ ] Load balancer configured
 - [ ] DNS configured
@@ -1284,6 +1296,7 @@ docker scan jobnaut/frontend:latest
 - [ ] VPC/network configured
 
 **Application:**
+
 - [ ] All secrets configured
 - [ ] Environment variables set
 - [ ] Database migrated
@@ -1292,6 +1305,7 @@ docker scan jobnaut/frontend:latest
 - [ ] Alerting configured
 
 **Testing:**
+
 - [ ] Health checks passing
 - [ ] Load tests passed
 - [ ] Security scan passed
@@ -1300,22 +1314,26 @@ docker scan jobnaut/frontend:latest
 #### Deployment Steps
 
 1. **Deploy database first**
+
    ```bash
    # Apply migrations
    ./scripts/load-secrets.sh npx prisma migrate deploy
    ```
 
 2. **Deploy backend**
+
    ```bash
    docker-compose -f docker-compose.prod.yml up -d backend
    ```
 
 3. **Deploy frontend**
+
    ```bash
    docker-compose -f docker-compose.prod.yml up -d frontend
    ```
 
 4. **Verify deployment**
+
    ```bash
    curl https://api.jobnaut.com/health
    curl https://jobnaut.com
@@ -1331,11 +1349,13 @@ docker scan jobnaut/frontend:latest
 If issues detected:
 
 1. **Stop new deployment**
+
    ```bash
    docker-compose -f docker-compose.prod.yml down
    ```
 
 2. **Restore previous version**
+
    ```bash
    git checkout <previous-version>
    docker-compose -f docker-compose.prod.yml up -d
@@ -1347,6 +1367,7 @@ If issues detected:
    ```
 
 **Phase 10 Checklist:**
+
 - [ ] Production deployed successfully
 - [ ] Health checks passing
 - [ ] Monitoring active
@@ -1361,6 +1382,7 @@ If issues detected:
 ### Day 1-7 After Deployment
 
 **Monitor Daily:**
+
 - [ ] Error rates (Sentry)
 - [ ] Response times (Grafana)
 - [ ] Resource usage (CPU/Memory)
@@ -1368,6 +1390,7 @@ If issues detected:
 - [ ] User reports
 
 **Review Weekly:**
+
 - [ ] Performance trends
 - [ ] Cost analysis
 - [ ] Security alerts
@@ -1379,6 +1402,7 @@ If issues detected:
 ## Success Criteria
 
 **Deployment is successful when:**
+
 - ✅ All health checks green
 - ✅ Error rate < 0.1%
 - ✅ P95 response time < 500ms
@@ -1393,11 +1417,13 @@ If issues detected:
 ## Emergency Contacts
 
 **On-Call Rotation:**
+
 - Primary: [Name] - [Phone]
 - Secondary: [Name] - [Phone]
 - Manager: [Name] - [Phone]
 
 **Escalation Path:**
+
 1. On-call engineer (0-30 min)
 2. Team lead (30-60 min)
 3. Engineering manager (60+ min)
@@ -1407,6 +1433,7 @@ If issues detected:
 ## Quick Reference
 
 **Common Commands:**
+
 ```bash
 # Check health
 curl https://api.jobnaut.com/health
@@ -1425,6 +1452,7 @@ docker-compose -f docker-compose.prod.yml up -d --scale backend=3
 ```
 
 **Important URLs:**
+
 - Production: https://jobnaut.com
 - API: https://api.jobnaut.com
 - Sentry: https://sentry.io/organizations/.../projects/jobnaut

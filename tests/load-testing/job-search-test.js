@@ -9,19 +9,19 @@ const errorRate = new Rate('errors');
 export const options = {
   // Ramp up users
   stages: [
-    { duration: '30s', target: 50 },    // Ramp up to 50 users over 30 seconds
-    { duration: '1m', target: 50 },     // Stay at 50 users for 1 minute
-    { duration: '30s', target: 100 },   // Ramp up to 100 users over 30 seconds
-    { duration: '1m', target: 100 },    // Stay at 100 users for 1 minute
-    { duration: '30s', target: 0 },     // Ramp down to 0 users over 30 seconds
+    { duration: '30s', target: 50 }, // Ramp up to 50 users over 30 seconds
+    { duration: '1m', target: 50 }, // Stay at 50 users for 1 minute
+    { duration: '30s', target: 100 }, // Ramp up to 100 users over 30 seconds
+    { duration: '1m', target: 100 }, // Stay at 100 users for 1 minute
+    { duration: '30s', target: 0 }, // Ramp down to 0 users over 30 seconds
   ],
 
   // Thresholds for performance expectations
   thresholds: {
-    'http_req_duration': ['p(95)<500'], // 95% of requests should be below 500ms
+    http_req_duration: ['p(95)<500'], // 95% of requests should be below 500ms
     'http_req_duration{kind:health_check}': ['avg<300'], // Average health check requests should be below 300ms
     'http_req_duration{kind:trpc}': ['avg<400'], // Average tRPC requests should be below 400ms
-    'errors': ['rate<0.1'], // Error rate should be less than 10%
+    errors: ['rate<0.1'], // Error rate should be less than 10%
   },
 };
 
@@ -49,13 +49,18 @@ export default function () {
 
   // Test tRPC job search endpoint (public endpoint)
   // Using tRPC query parameter format
-  const jobSearchRes = http.get(`${BASE_URL}/trpc/jobs.search?input=${encodeURIComponent(JSON.stringify({
-    query: 'software',
-    limit: 10,
-    offset: 0
-  }))}`, {
-    tags: { kind: 'trpc' },
-  });
+  const jobSearchRes = http.get(
+    `${BASE_URL}/trpc/jobs.search?input=${encodeURIComponent(
+      JSON.stringify({
+        query: 'software',
+        limit: 10,
+        offset: 0,
+      })
+    )}`,
+    {
+      tags: { kind: 'trpc' },
+    }
+  );
 
   check(jobSearchRes, {
     'job search status is 200': (r) => r.status === 200,
@@ -80,11 +85,16 @@ export default function () {
   sleep(0.5);
 
   // Test tRPC job details endpoint (public endpoint)
-  const jobDetailsRes = http.get(`${BASE_URL}/trpc/jobs.getById?input=${encodeURIComponent(JSON.stringify({
-    id: 1
-  }))}`, {
-    tags: { kind: 'trpc' },
-  });
+  const jobDetailsRes = http.get(
+    `${BASE_URL}/trpc/jobs.getById?input=${encodeURIComponent(
+      JSON.stringify({
+        id: 1,
+      })
+    )}`,
+    {
+      tags: { kind: 'trpc' },
+    }
+  );
 
   check(jobDetailsRes, {
     'job details status is 200': (r) => r.status === 200,

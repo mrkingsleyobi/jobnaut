@@ -14,26 +14,28 @@ const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 
 // Add security headers
-app.use(helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      styleSrc: ["'self'", "'unsafe-inline'"],
-      scriptSrc: ["'self'"],
-      imgSrc: ["'self'", "data:", "https:"],
-      connectSrc: ["'self'", "https://*.clerk.accounts.dev"],
-      fontSrc: ["'self'", "https:", "data:"],
-      objectSrc: ["'none'"],
-      mediaSrc: ["'self'"],
-      frameSrc: ["'none'"]
-    }
-  },
-  hsts: {
-    maxAge: 31536000,
-    includeSubDomains: true,
-    preload: true
-  }
-}));
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        styleSrc: ["'self'", "'unsafe-inline'"],
+        scriptSrc: ["'self'"],
+        imgSrc: ["'self'", 'data:', 'https:'],
+        connectSrc: ["'self'", 'https://*.clerk.accounts.dev'],
+        fontSrc: ["'self'", 'https:', 'data:'],
+        objectSrc: ["'none'"],
+        mediaSrc: ["'self'"],
+        frameSrc: ["'none'"],
+      },
+    },
+    hsts: {
+      maxAge: 31536000,
+      includeSubDomains: true,
+      preload: true,
+    },
+  })
+);
 
 // Configure CORS
 const corsOptions = {
@@ -46,7 +48,7 @@ const corsOptions = {
       'http://localhost:3000',
       'http://localhost:3001',
       'https://yourdomain.com',
-      'https://www.yourdomain.com'
+      'https://www.yourdomain.com',
     ];
 
     if (allowedOrigins.indexOf(origin) !== -1) {
@@ -56,7 +58,7 @@ const corsOptions = {
     }
   },
   credentials: true,
-  optionsSuccessStatus: 200
+  optionsSuccessStatus: 200,
 };
 
 app.use(cors(corsOptions));
@@ -65,7 +67,7 @@ app.use(cors(corsOptions));
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 100, // limit each IP to 100 requests per windowMs
-  message: 'Too many requests from this IP, please try again later.'
+  message: 'Too many requests from this IP, please try again later.',
 });
 
 // Authentication rate limiting
@@ -73,7 +75,7 @@ const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 5, // limit each IP to 5 requests per windowMs
   message: 'Too many authentication attempts, please try again later.',
-  skipSuccessfulRequests: true
+  skipSuccessfulRequests: true,
 });
 
 // Apply rate limiting
@@ -81,11 +83,13 @@ app.use('/api/', apiLimiter);
 app.use('/auth/', authLimiter);
 
 // Add request size limits and protection
-app.use(express.json({
-  limit: '10mb',
-  // Prevent prototype pollution
-  strict: true
-}));
+app.use(
+  express.json({
+    limit: '10mb',
+    // Prevent prototype pollution
+    strict: true,
+  })
+);
 
 // Add protection against common attacks
 app.use((req, res, next) => {
@@ -113,7 +117,7 @@ app.get('/health', (req, res) => {
   res.json({
     status: 'OK',
     timestamp: new Date().toISOString(),
-    service: 'JobNaut API'
+    service: 'JobNaut API',
   });
 });
 
@@ -126,8 +130,8 @@ app.get('/', (req, res) => {
     endpoints: {
       rest: '/api/v1/*',
       trpc: '/trpc/*',
-      health: '/health'
-    }
+      health: '/health',
+    },
   });
 });
 
@@ -140,7 +144,7 @@ app.use((err, req, res, next) => {
   console.error('Unhandled error:', err);
   res.status(500).json({
     error: 'Internal server error',
-    message: envConfig.isDevelopment() ? err.message : 'Something went wrong'
+    message: envConfig.isDevelopment() ? err.message : 'Something went wrong',
   });
 });
 

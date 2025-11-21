@@ -14,6 +14,7 @@ The Job model (`src/models/job.js`) implements caching for frequently accessed d
 - **Search Results**: Cached with key `search_{query}_{page}_{limit}` for 5 minutes
 
 Cache invalidation occurs when:
+
 - New jobs are created (flushes all cache)
 - Jobs are updated (removes specific job and flushes search cache)
 - Jobs are deleted (removes specific job and flushes search cache)
@@ -27,6 +28,7 @@ The User model (`src/models/user.js`) implements caching for user profile data:
 - **User by Email**: Cached with key `user_email_{email}` for 5 minutes
 
 Cache invalidation occurs when:
+
 - User profiles are updated (removes all cached entries for that user)
 - Users are deleted (removes all cached entries for that user)
 
@@ -38,6 +40,7 @@ The Saved Job model (`src/models/savedJob.js`) implements caching for saved job 
 - **Individual saved job**: Cached with key `saved_job_{userId}_{jobId}` for 5 minutes
 
 Cache invalidation occurs when:
+
 - New jobs are saved (removes user's saved jobs cache)
 - Saved jobs are updated (removes specific saved job and user's saved jobs cache)
 - Saved jobs are deleted (removes specific saved job and user's saved jobs cache)
@@ -45,6 +48,7 @@ Cache invalidation occurs when:
 ## Cache Configuration
 
 All caches use the following configuration:
+
 - **TTL (Time To Live)**: 300 seconds (5 minutes)
 - **Type**: In-memory caching using NodeCache
 - **Scope**: Per-server instance (not shared across multiple server instances)
@@ -69,12 +73,12 @@ Consider the following enhancements for production environments:
 
 ## Cache Keys Reference
 
-| Data Type | Cache Key Pattern | Example |
-|-----------|-------------------|---------|
-| Job by ID | `job_{id}` | `job_123` |
-| Job Search | `search_{query}_{page}_{limit}` | `search_software_1_10` |
-| User by ID | `user_{id}` | `user_456` |
-| User by Clerk ID | `user_clerk_{clerkId}` | `user_clerk_user_789` |
-| User by Email | `user_email_{email}` | `user_email_john@example.com` |
-| Saved Jobs by User | `saved_jobs_{userId}` | `saved_jobs_456` |
-| Saved Job | `saved_job_{userId}_{jobId}` | `saved_job_456_123` |
+| Data Type          | Cache Key Pattern               | Example                       |
+| ------------------ | ------------------------------- | ----------------------------- |
+| Job by ID          | `job_{id}`                      | `job_123`                     |
+| Job Search         | `search_{query}_{page}_{limit}` | `search_software_1_10`        |
+| User by ID         | `user_{id}`                     | `user_456`                    |
+| User by Clerk ID   | `user_clerk_{clerkId}`          | `user_clerk_user_789`         |
+| User by Email      | `user_email_{email}`            | `user_email_john@example.com` |
+| Saved Jobs by User | `saved_jobs_{userId}`           | `saved_jobs_456`              |
+| Saved Job          | `saved_job_{userId}_{jobId}`    | `saved_job_456_123`           |

@@ -51,7 +51,7 @@ describe('Job Service', () => {
         postedDate: expect.any(Date),
         applicationLink: 'https://example.com/apply/1',
         source: 'jsearch',
-        sourceId: '123'
+        sourceId: '123',
       });
     });
 
@@ -84,8 +84,8 @@ describe('Job Service', () => {
           location: 'San Francisco, CA',
           description: 'Exciting opportunity for JavaScript developer',
           postedDate: new Date(),
-          applicationLink: 'https://example.com/apply'
-        }
+          applicationLink: 'https://example.com/apply',
+        },
       ];
 
       const mockStoredJob = {
@@ -96,7 +96,7 @@ describe('Job Service', () => {
         description: 'Exciting opportunity for JavaScript developer',
         skills: JSON.stringify([]), // Empty skills array since NLP is skipped
         postedDate: rawJobs[0].postedDate,
-        applicationLink: 'https://example.com/apply'
+        applicationLink: 'https://example.com/apply',
       };
 
       // No NLP service call expected in test environment
@@ -125,10 +125,7 @@ describe('Job Service', () => {
   describe('batchExtractSkills', () => {
     it('should skip batch NLP processing in test environment and return empty arrays', async () => {
       // Arrange
-      const descriptions = [
-        'JavaScript and React required',
-        'Python and Django experience needed'
-      ];
+      const descriptions = ['JavaScript and React required', 'Python and Django experience needed'];
 
       // Act
       const result = await jobService.batchExtractSkills(descriptions);
@@ -153,13 +150,13 @@ describe('Job Service', () => {
             description: 'Exciting opportunity',
             skills: JSON.stringify(['JavaScript', 'React']),
             postedDate: new Date(),
-            applicationLink: 'https://example.com/apply/1'
-          }
+            applicationLink: 'https://example.com/apply/1',
+          },
         ],
         total: 1,
         page: 1,
         limit: 10,
-        totalPages: 1
+        totalPages: 1,
       };
 
       jobModel.searchJobs.mockResolvedValue(mockResult);
@@ -184,7 +181,7 @@ describe('Job Service', () => {
         description: 'Exciting opportunity',
         skills: JSON.stringify(['JavaScript', 'React']),
         postedDate: new Date(),
-        applicationLink: 'https://example.com/apply'
+        applicationLink: 'https://example.com/apply',
       };
 
       jobModel.getJobById.mockResolvedValue(mockJob);
@@ -196,7 +193,7 @@ describe('Job Service', () => {
       expect(jobModel.getJobById).toHaveBeenCalledWith(1);
       expect(result).toEqual({
         ...mockJob,
-        skills: ['JavaScript', 'React']
+        skills: ['JavaScript', 'React'],
       });
     });
 
@@ -205,9 +202,7 @@ describe('Job Service', () => {
       jobModel.getJobById.mockResolvedValue(null);
 
       // Act & Assert
-      await expect(jobService.getJobById(999))
-        .rejects
-        .toThrow('Job not found');
+      await expect(jobService.getJobById(999)).rejects.toThrow('Job not found');
     });
   });
 
@@ -224,13 +219,13 @@ describe('Job Service', () => {
             description: 'Exciting opportunity',
             skills: JSON.stringify(['JavaScript', 'React']),
             postedDate: new Date(),
-            applicationLink: 'https://example.com/apply/1'
-          }
+            applicationLink: 'https://example.com/apply/1',
+          },
         ],
         total: 1,
         page: 1,
         limit: 10,
-        totalPages: 1
+        totalPages: 1,
       };
 
       jobModel.getAllJobs.mockResolvedValue(mockResult);
@@ -245,9 +240,9 @@ describe('Job Service', () => {
         jobs: [
           {
             ...mockResult.jobs[0],
-            skills: ['JavaScript', 'React']
-          }
-        ]
+            skills: ['JavaScript', 'React'],
+          },
+        ],
       });
     });
   });
@@ -256,7 +251,7 @@ describe('Job Service', () => {
     it('should update job with parsed skills', async () => {
       // Arrange
       const updateData = {
-        title: 'Senior Software Engineer'
+        title: 'Senior Software Engineer',
       };
 
       const mockUpdatedJob = {
@@ -267,7 +262,7 @@ describe('Job Service', () => {
         description: 'Exciting opportunity',
         skills: JSON.stringify(['JavaScript', 'React', 'Node.js']),
         postedDate: new Date(),
-        applicationLink: 'https://example.com/apply'
+        applicationLink: 'https://example.com/apply',
       };
 
       jobModel.updateJob.mockResolvedValue(mockUpdatedJob);
@@ -279,7 +274,7 @@ describe('Job Service', () => {
       expect(jobModel.updateJob).toHaveBeenCalledWith(1, updateData);
       expect(result).toEqual({
         ...mockUpdatedJob,
-        skills: ['JavaScript', 'React', 'Node.js']
+        skills: ['JavaScript', 'React', 'Node.js'],
       });
     });
   });
@@ -295,7 +290,7 @@ describe('Job Service', () => {
         description: 'Exciting opportunity',
         skills: JSON.stringify(['JavaScript', 'React']),
         postedDate: new Date(),
-        applicationLink: 'https://example.com/apply'
+        applicationLink: 'https://example.com/apply',
       };
 
       jobModel.deleteJob.mockResolvedValue(mockDeletedJob);
@@ -321,8 +316,8 @@ describe('Job Service', () => {
           description: 'Exciting opportunity',
           skills: ['JavaScript', 'React'],
           postedDate: new Date(),
-          applicationLink: 'https://example.com/apply'
-        }
+          applicationLink: 'https://example.com/apply',
+        },
       ];
 
       // Act

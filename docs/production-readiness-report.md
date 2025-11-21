@@ -14,6 +14,7 @@ JobNaut has a **MODERATE** production readiness rating. The application has stro
 ### Overall Rating: 6.5/10
 
 **Key Strengths:**
+
 - ✅ Comprehensive security middleware (Helmet, CORS, rate limiting)
 - ✅ Proper Docker containerization with health checks
 - ✅ Structured logging with Winston
@@ -21,6 +22,7 @@ JobNaut has a **MODERATE** production readiness rating. The application has stro
 - ✅ CI/CD pipeline configured
 
 **Critical Issues:**
+
 - ❌ Hardcoded production credentials in repository
 - ❌ Missing secrets management
 - ❌ No monitoring/observability tools
@@ -36,6 +38,7 @@ JobNaut has a **MODERATE** production readiness rating. The application has stro
 ### Current State
 
 **Files Reviewed:**
+
 - `/home/user/jobnaut/.env.example`
 - `/home/user/jobnaut/.env.production`
 - `/home/user/jobnaut/frontend/.env.production`
@@ -46,6 +49,7 @@ JobNaut has a **MODERATE** production readiness rating. The application has stro
 #### 🔴 CRITICAL: Hardcoded Production Credentials
 
 **File:** `.env.production`
+
 ```bash
 DATABASE_URL=postgresql://user:password@localhost:5432/jobnaut_prod
 CLERK_SECRET_KEY=your_production_clerk_secret_key
@@ -58,6 +62,7 @@ ENCRYPTION_KEY=your_production_encryption_key_32_bytes_long_here
 #### 🟡 MEDIUM: Weak Environment Validation
 
 **File:** `config/env.js` (lines 15-26)
+
 - Only warns about missing variables, doesn't fail
 - Provides fallback values that may not be secure
 - Missing validation for:
@@ -69,6 +74,7 @@ ENCRYPTION_KEY=your_production_encryption_key_32_bytes_long_here
 #### 🟡 MEDIUM: Missing Production Environment Variables
 
 **Missing from .env.production:**
+
 - `AI_PROVIDER` and AI service keys
 - `MEILI_MASTER_KEY` and `MEILISEARCH_HOST`
 - `CORS_ORIGIN` for production domains
@@ -83,6 +89,7 @@ ENCRYPTION_KEY=your_production_encryption_key_32_bytes_long_here
 **IMMEDIATE ACTIONS (P0):**
 
 1. **Remove .env.production from repository**
+
    ```bash
    git rm --cached .env.production frontend/.env.production
    # Add to .gitignore if not already there
@@ -95,6 +102,7 @@ ENCRYPTION_KEY=your_production_encryption_key_32_bytes_long_here
    - Never commit production credentials
 
 3. **Enhance environment validation**
+
    ```javascript
    // In config/env.js
    validateEnvironment() {
@@ -136,6 +144,7 @@ ENCRYPTION_KEY=your_production_encryption_key_32_bytes_long_here
 ### Current State
 
 **Files Reviewed:**
+
 - `/home/user/jobnaut/Dockerfile` (Backend)
 - `/home/user/jobnaut/frontend/Dockerfile` (Frontend)
 - `/home/user/jobnaut/docker-compose.yml` (Development)
@@ -144,17 +153,20 @@ ENCRYPTION_KEY=your_production_encryption_key_32_bytes_long_here
 ### Strengths
 
 ✅ **Backend Dockerfile:**
+
 - Uses Node 20 LTS (good choice)
 - Creates non-root user for security
 - Includes health check
 - Minimal image with `--only=production`
 
 ✅ **Frontend Dockerfile:**
+
 - Uses Node 20 Alpine (lightweight)
 - Creates non-root user
 - Multi-stage build potential
 
 ✅ **Production docker-compose:**
+
 - Uses environment variables properly
 - Health checks configured
 - Restart policies enabled
@@ -165,6 +177,7 @@ ENCRYPTION_KEY=your_production_encryption_key_32_bytes_long_here
 #### 🟡 MEDIUM: Missing Multi-Stage Build
 
 **Current backend Dockerfile copies everything:**
+
 ```dockerfile
 COPY . .
 ```
@@ -175,6 +188,7 @@ COPY . .
 #### 🟡 MEDIUM: No Image Vulnerability Scanning
 
 **Missing:**
+
 - Docker image scanning in CI/CD
 - Base image security updates strategy
 - Image signing/verification
@@ -182,16 +196,18 @@ COPY . .
 #### 🟢 LOW: Missing Docker Compose Override for Local Development
 
 **Missing:**
+
 - `docker-compose.override.yml` for local customizations
 - Developer-specific configurations
 
 #### 🔴 CRITICAL: Production Docker Compose Exposes Internal Ports
 
 **File:** `docker-compose.prod.yml`
+
 ```yaml
 database:
   ports:
-    - "5432:5432"  # ❌ Should not be exposed externally
+    - '5432:5432' # ❌ Should not be exposed externally
 ```
 
 **Risk:** Database accessible from outside the Docker network
@@ -202,15 +218,17 @@ database:
 **IMMEDIATE ACTIONS (P0):**
 
 1. **Remove external database port exposure in production**
+
    ```yaml
    # docker-compose.prod.yml
    database:
      # Remove ports section - keep internal networking only
      expose:
-       - "5432"  # Only accessible within Docker network
+       - '5432' # Only accessible within Docker network
    ```
 
 2. **Implement multi-stage build for backend**
+
    ```dockerfile
    # Stage 1: Build dependencies
    FROM node:20-slim AS dependencies
@@ -255,6 +273,7 @@ database:
    ```
 
 3. **Add Docker image scanning to CI/CD**
+
    ```yaml
    # .github/workflows/deploy.yml
    - name: Scan Docker image for vulnerabilities
@@ -296,6 +315,7 @@ database:
 ### Current State
 
 **Files Reviewed:**
+
 - `/home/user/jobnaut/src/server.js`
 - `/home/user/jobnaut/src/index.js`
 - `/home/user/jobnaut/src/services/encryption.js`
@@ -304,6 +324,7 @@ database:
 ### Strengths
 
 ✅ **Backend Security Middleware:**
+
 - Helmet.js configured with CSP
 - CORS with origin validation
 - Rate limiting (API: 100 req/15min, Auth: 5 req/15min)
@@ -311,11 +332,13 @@ database:
 - Security headers properly set
 
 ✅ **Encryption Service:**
+
 - Uses AES-256-GCM (strong encryption)
 - Proper IV generation
 - Auth tags for integrity
 
 ✅ **Authentication:**
+
 - Clerk integration for auth
 - Protected route middleware
 
@@ -324,12 +347,15 @@ database:
 #### 🔴 CRITICAL: Weak CORS Configuration in Production
 
 **File:** `src/server.js` (lines 86-89)
+
 ```javascript
 const allowedOrigins = envConfig.isDevelopment()
-  ? [/* dev origins */]
+  ? [
+      /* dev origins */
+    ]
   : [
-      'https://yourdomain.com',  // ❌ Placeholder domain
-      'https://www.yourdomain.com'
+      'https://yourdomain.com', // ❌ Placeholder domain
+      'https://www.yourdomain.com',
     ];
 ```
 
@@ -339,6 +365,7 @@ const allowedOrigins = envConfig.isDevelopment()
 #### 🔴 CRITICAL: No HTTPS Enforcement
 
 **Missing:**
+
 - HTTPS redirect middleware
 - Secure cookie settings
 - HSTS enforcement in load balancer
@@ -346,13 +373,14 @@ const allowedOrigins = envConfig.isDevelopment()
 #### 🟡 MEDIUM: Frontend Missing Security Headers
 
 **File:** `frontend/nuxt.config.js`
+
 ```javascript
 export default defineNuxtConfig({
   devtools: { enabled: true },
   // ❌ No security headers configuration
   // ❌ No CSP for frontend
   // ❌ No helmet equivalent
-})
+});
 ```
 
 #### 🟡 MEDIUM: Console.log in Production Code
@@ -365,6 +393,7 @@ export default defineNuxtConfig({
 #### 🟡 MEDIUM: Encryption Key Handling
 
 **File:** `src/services/encryption.js` (line 22)
+
 ```javascript
 const key = process.env.ENCRYPTION_KEY || 'jobnaut_development_encryption_key_32bytes!';
 ```
@@ -375,6 +404,7 @@ const key = process.env.ENCRYPTION_KEY || 'jobnaut_development_encryption_key_32
 #### 🟢 LOW: Missing Input Validation
 
 **Missing:**
+
 - express-validator not consistently used
 - No schema validation with Zod on all endpoints
 - No SQL injection prevention beyond Prisma
@@ -384,6 +414,7 @@ const key = process.env.ENCRYPTION_KEY || 'jobnaut_development_encryption_key_32
 **IMMEDIATE ACTIONS (P0):**
 
 1. **Fix CORS configuration**
+
    ```javascript
    // src/server.js
    const getAllowedOrigins = () => {
@@ -396,11 +427,12 @@ const key = process.env.ENCRYPTION_KEY || 'jobnaut_development_encryption_key_32
      if (!origins) {
        throw new Error('CORS_ALLOWED_ORIGINS must be set in production');
      }
-     return origins.split(',').map(o => o.trim());
+     return origins.split(',').map((o) => o.trim());
    };
    ```
 
 2. **Add HTTPS enforcement middleware**
+
    ```javascript
    // Add to src/server.js
    if (envConfig.isProduction()) {
@@ -414,6 +446,7 @@ const key = process.env.ENCRYPTION_KEY || 'jobnaut_development_encryption_key_32
    ```
 
 3. **Replace all console.log with Winston logger**
+
    ```bash
    # Create a migration script
    find src -name "*.js" -exec sed -i 's/console\.log/logger.info/g' {} \;
@@ -421,6 +454,7 @@ const key = process.env.ENCRYPTION_KEY || 'jobnaut_development_encryption_key_32
    ```
 
 4. **Add Nuxt security module for frontend**
+
    ```javascript
    // frontend/nuxt.config.js
    export default defineNuxtConfig({
@@ -443,7 +477,7 @@ const key = process.env.ENCRYPTION_KEY || 'jobnaut_development_encryption_key_32
          },
        },
      },
-   })
+   });
    ```
 
 5. **Fail fast on missing encryption key**
@@ -465,17 +499,20 @@ const key = process.env.ENCRYPTION_KEY || 'jobnaut_development_encryption_key_32
 ### Current State
 
 **Files Reviewed:**
+
 - `/home/user/jobnaut/.github/workflows/ci.yml`
 - `/home/user/jobnaut/.github/workflows/deploy.yml`
 
 ### Strengths
 
 ✅ **CI Workflow:**
+
 - Tests on multiple Node versions (18.x, 20.x)
 - Uses npm ci for reproducible installs
 - Runs tests and build
 
 ✅ **Deploy Workflow:**
+
 - Tests before deployment
 - PostgreSQL service for integration tests
 - Docker image building
@@ -486,6 +523,7 @@ const key = process.env.ENCRYPTION_KEY || 'jobnaut_development_encryption_key_32
 #### 🔴 CRITICAL: Deployment Script is a Placeholder
 
 **File:** `deploy.yml` (lines 92-98)
+
 ```yaml
 - name: Deploy to production
   run: |
@@ -500,6 +538,7 @@ const key = process.env.ENCRYPTION_KEY || 'jobnaut_development_encryption_key_32
 #### 🟡 MEDIUM: Missing Security Scanning
 
 **Missing from CI/CD:**
+
 - Dependency vulnerability scanning
 - SAST (Static Application Security Testing)
 - Secret scanning
@@ -508,6 +547,7 @@ const key = process.env.ENCRYPTION_KEY || 'jobnaut_development_encryption_key_32
 #### 🟡 MEDIUM: No Rollback Strategy
 
 **Missing:**
+
 - Blue-green deployment
 - Canary releases
 - Automatic rollback on failure
@@ -516,6 +556,7 @@ const key = process.env.ENCRYPTION_KEY || 'jobnaut_development_encryption_key_32
 #### 🟡 MEDIUM: No Performance Testing
 
 **Missing:**
+
 - Load testing
 - Performance regression tests
 - API response time validation
@@ -529,6 +570,7 @@ const key = process.env.ENCRYPTION_KEY || 'jobnaut_development_encryption_key_32
 **IMMEDIATE ACTIONS (P0):**
 
 1. **Implement actual deployment**
+
    ```yaml
    # .github/workflows/deploy.yml
    - name: Deploy to production
@@ -545,6 +587,7 @@ const key = process.env.ENCRYPTION_KEY || 'jobnaut_development_encryption_key_32
    ```
 
 2. **Add security scanning**
+
    ```yaml
    # Add to ci.yml
    security-scan:
@@ -569,6 +612,7 @@ const key = process.env.ENCRYPTION_KEY || 'jobnaut_development_encryption_key_32
    ```
 
 3. **Add load testing**
+
    ```yaml
    # Add to deploy.yml (after deployment)
    - name: Performance validation
@@ -589,6 +633,7 @@ const key = process.env.ENCRYPTION_KEY || 'jobnaut_development_encryption_key_32
 ### Current State
 
 **Logging Implementation:**
+
 - Winston logger configured in `src/server.js`
 - Logs to files: `logs/error.log`, `logs/combined.log`
 - Console logging in development
@@ -597,6 +642,7 @@ const key = process.env.ENCRYPTION_KEY || 'jobnaut_development_encryption_key_32
 ### Strengths
 
 ✅ **Logging:**
+
 - Structured JSON logging
 - Separate error logs
 - Request tracking with duration
@@ -607,6 +653,7 @@ const key = process.env.ENCRYPTION_KEY || 'jobnaut_development_encryption_key_32
 #### 🔴 CRITICAL: No Application Monitoring
 
 **Missing:**
+
 - Application Performance Monitoring (APM)
 - Error tracking (Sentry, Rollbar, etc.)
 - Uptime monitoring
@@ -616,6 +663,7 @@ const key = process.env.ENCRYPTION_KEY || 'jobnaut_development_encryption_key_32
 #### 🔴 CRITICAL: No Database Monitoring
 
 **Missing:**
+
 - Query performance monitoring
 - Connection pool metrics
 - Slow query logging
@@ -624,6 +672,7 @@ const key = process.env.ENCRYPTION_KEY || 'jobnaut_development_encryption_key_32
 #### 🔴 CRITICAL: Log Management Strategy Missing
 
 **Issues:**
+
 - Logs stored on disk (not rotated)
 - No centralized log aggregation
 - No log retention policy
@@ -633,6 +682,7 @@ const key = process.env.ENCRYPTION_KEY || 'jobnaut_development_encryption_key_32
 #### 🟡 MEDIUM: No Business Metrics
 
 **Missing:**
+
 - User activity tracking
 - API usage metrics
 - Job search analytics
@@ -642,12 +692,13 @@ const key = process.env.ENCRYPTION_KEY || 'jobnaut_development_encryption_key_32
 #### 🟡 MEDIUM: Missing Health Check Completeness
 
 **File:** `src/index.js` (lines 112-118)
+
 ```javascript
 app.get('/health', (req, res) => {
   res.json({
-    status: 'OK',  // ❌ Doesn't check dependencies
+    status: 'OK', // ❌ Doesn't check dependencies
     timestamp: new Date().toISOString(),
-    service: 'JobNaut API'
+    service: 'JobNaut API',
   });
 });
 ```
@@ -660,6 +711,7 @@ app.get('/health', (req, res) => {
 **IMMEDIATE ACTIONS (P0):**
 
 1. **Implement comprehensive health checks**
+
    ```javascript
    // src/routes/health.js
    const express = require('express');
@@ -671,7 +723,7 @@ app.get('/health', (req, res) => {
        timestamp: new Date().toISOString(),
        service: 'JobNaut API',
        status: 'healthy',
-       checks: {}
+       checks: {},
      };
 
      // Database check
@@ -715,14 +767,15 @@ app.get('/health', (req, res) => {
    ```
 
 2. **Add error tracking with Sentry**
+
    ```bash
    npm install @sentry/node @sentry/tracing
    ```
 
    ```javascript
    // src/monitoring/sentry.js
-   const Sentry = require("@sentry/node");
-   const Tracing = require("@sentry/tracing");
+   const Sentry = require('@sentry/node');
+   const Tracing = require('@sentry/tracing');
 
    const initSentry = (app) => {
      if (process.env.NODE_ENV === 'production') {
@@ -745,6 +798,7 @@ app.get('/health', (req, res) => {
    ```
 
 3. **Implement log rotation**
+
    ```javascript
    // src/config/logger.js
    const winston = require('winston');
@@ -755,7 +809,7 @@ app.get('/health', (req, res) => {
      datePattern: 'YYYY-MM-DD',
      maxSize: '20m',
      maxFiles: '14d',
-     level: 'info'
+     level: 'info',
    });
 
    const errorRotateTransport = new winston.transports.DailyRotateFile({
@@ -763,7 +817,7 @@ app.get('/health', (req, res) => {
      datePattern: 'YYYY-MM-DD',
      maxSize: '20m',
      maxFiles: '30d',
-     level: 'error'
+     level: 'error',
    });
 
    const logger = winston.createLogger({
@@ -773,16 +827,14 @@ app.get('/health', (req, res) => {
        winston.format.errors({ stack: true }),
        winston.format.json()
      ),
-     transports: [
-       fileRotateTransport,
-       errorRotateTransport
-     ]
+     transports: [fileRotateTransport, errorRotateTransport],
    });
 
    module.exports = logger;
    ```
 
 4. **Add Prometheus metrics**
+
    ```bash
    npm install prom-client
    ```
@@ -799,13 +851,13 @@ app.get('/health', (req, res) => {
      name: 'http_request_duration_seconds',
      help: 'Duration of HTTP requests in seconds',
      labelNames: ['method', 'route', 'status_code'],
-     buckets: [0.1, 0.5, 1, 2, 5]
+     buckets: [0.1, 0.5, 1, 2, 5],
    });
 
    const httpRequestTotal = new promClient.Counter({
      name: 'http_requests_total',
      help: 'Total number of HTTP requests',
-     labelNames: ['method', 'route', 'status_code']
+     labelNames: ['method', 'route', 'status_code'],
    });
 
    register.registerMetric(httpRequestDuration);
@@ -816,7 +868,9 @@ app.get('/health', (req, res) => {
 
      res.on('finish', () => {
        const duration = (Date.now() - start) / 1000;
-       httpRequestDuration.labels(req.method, req.route?.path || req.path, res.statusCode).observe(duration);
+       httpRequestDuration
+         .labels(req.method, req.route?.path || req.path, res.statusCode)
+         .observe(duration);
        httpRequestTotal.labels(req.method, req.route?.path || req.path, res.statusCode).inc();
      });
 
@@ -827,12 +881,13 @@ app.get('/health', (req, res) => {
    ```
 
 5. **Set up centralized logging**
+
    ```yaml
    # docker-compose.prod.yml - Add logging services
    loki:
      image: grafana/loki:2.9.0
      ports:
-       - "3100:3100"
+       - '3100:3100'
      volumes:
        - loki_data:/loki
      command: -config.file=/etc/loki/local-config.yaml
@@ -847,7 +902,7 @@ app.get('/health', (req, res) => {
    grafana:
      image: grafana/grafana:10.0.0
      ports:
-       - "3002:3000"
+       - '3002:3000'
      environment:
        - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD}
      volumes:
@@ -861,18 +916,21 @@ app.get('/health', (req, res) => {
 ### Current State
 
 **Files Reviewed:**
+
 - `/home/user/jobnaut/src/server.js` (error middleware)
 - `/home/user/jobnaut/src/index.js`
 
 ### Strengths
 
 ✅ **Error Handling:**
+
 - Centralized error middleware
 - Different error types handled (parse, auth, rate limit)
 - Environment-aware error messages (dev vs prod)
 - Graceful shutdown handlers (SIGTERM, SIGINT)
 
 ✅ **Rate Limiting:**
+
 - Protects against DoS
 - Different limits for different endpoints
 
@@ -881,6 +939,7 @@ app.get('/health', (req, res) => {
 #### 🟡 MEDIUM: No Circuit Breaker Pattern
 
 **Missing:**
+
 - Circuit breaker for external services (AI APIs, Meilisearch)
 - Fallback responses when services are down
 - Timeout management
@@ -888,10 +947,11 @@ app.get('/health', (req, res) => {
 #### 🟡 MEDIUM: Incomplete Graceful Shutdown
 
 **File:** `src/server.js` (lines 225-234)
+
 ```javascript
 process.on('SIGTERM', () => {
   logger.info('SIGTERM received, shutting down gracefully');
-  process.exit(0);  // ❌ Doesn't close connections
+  process.exit(0); // ❌ Doesn't close connections
 });
 ```
 
@@ -901,6 +961,7 @@ process.on('SIGTERM', () => {
 #### 🟡 MEDIUM: No Retry Logic for Database Operations
 
 **Missing:**
+
 - Automatic retry for transient database failures
 - Connection pool monitoring
 - Deadlock handling
@@ -915,6 +976,7 @@ process.on('SIGTERM', () => {
 **IMMEDIATE ACTIONS (P0):**
 
 1. **Implement circuit breaker**
+
    ```bash
    npm install opossum
    ```
@@ -926,7 +988,7 @@ process.on('SIGTERM', () => {
    const breakerOptions = {
      timeout: 5000,
      errorThresholdPercentage: 50,
-     resetTimeout: 30000
+     resetTimeout: 30000,
    };
 
    const createCircuitBreaker = (asyncFunction, fallbackFunction) => {
@@ -945,6 +1007,7 @@ process.on('SIGTERM', () => {
    ```
 
 2. **Improve graceful shutdown**
+
    ```javascript
    // src/server.js
    let server;
@@ -957,7 +1020,8 @@ process.on('SIGTERM', () => {
          logger.info('HTTP server closed');
 
          // Close database connections
-         prisma.$disconnect()
+         prisma
+           .$disconnect()
            .then(() => {
              logger.info('Database connections closed');
              process.exit(0);
@@ -989,6 +1053,7 @@ process.on('SIGTERM', () => {
    ```
 
 3. **Add request ID tracking**
+
    ```bash
    npm install express-request-id
    ```
@@ -1004,7 +1069,7 @@ process.on('SIGTERM', () => {
      req.logger.info('Incoming request', {
        method: req.method,
        url: req.url,
-       ip: req.ip
+       ip: req.ip,
      });
      next();
    });
@@ -1017,6 +1082,7 @@ process.on('SIGTERM', () => {
 ### Vulnerability Scan Results
 
 **Backend Dependencies:**
+
 ```
 3 low severity vulnerabilities
 
@@ -1030,6 +1096,7 @@ Fix: npm audit fix
 ```
 
 **Frontend Dependencies:**
+
 - No package-lock.json found (unable to audit)
 
 ### Issues Identified
@@ -1043,6 +1110,7 @@ Fix: npm audit fix
 #### 🔴 CRITICAL: No Regular Security Audits
 
 **Missing:**
+
 - Automated dependency updates (Dependabot/Renovate)
 - Regular security scanning schedule
 - Vulnerability monitoring
@@ -1056,6 +1124,7 @@ Fix: npm audit fix
 #### 🟡 MEDIUM: Outdated Dependencies Potential
 
 **Current versions checked:**
+
 - Node.js 18.x, 20.x (good - LTS versions)
 - Nuxt 4.1.3 (latest)
 - No automated update process
@@ -1065,12 +1134,14 @@ Fix: npm audit fix
 **IMMEDIATE ACTIONS (P0):**
 
 1. **Fix known vulnerabilities**
+
    ```bash
    npm audit fix
    cd frontend && npm audit fix
    ```
 
 2. **Remove package-lock.json from .gitignore**
+
    ```bash
    # Edit .gitignore and remove lines 125-126
    git add package-lock.json frontend/package-lock.json
@@ -1078,51 +1149,53 @@ Fix: npm audit fix
    ```
 
 3. **Enable Dependabot**
+
    ```yaml
    # .github/dependabot.yml
    version: 2
    updates:
-     - package-ecosystem: "npm"
-       directory: "/"
+     - package-ecosystem: 'npm'
+       directory: '/'
        schedule:
-         interval: "weekly"
+         interval: 'weekly'
        open-pull-requests-limit: 10
        reviewers:
-         - "mrkingsleyobi"
+         - 'mrkingsleyobi'
        labels:
-         - "dependencies"
-         - "security"
+         - 'dependencies'
+         - 'security'
 
-     - package-ecosystem: "npm"
-       directory: "/frontend"
+     - package-ecosystem: 'npm'
+       directory: '/frontend'
        schedule:
-         interval: "weekly"
+         interval: 'weekly'
        open-pull-requests-limit: 10
        reviewers:
-         - "mrkingsleyobi"
+         - 'mrkingsleyobi'
        labels:
-         - "dependencies"
-         - "frontend"
+         - 'dependencies'
+         - 'frontend'
 
-     - package-ecosystem: "docker"
-       directory: "/"
+     - package-ecosystem: 'docker'
+       directory: '/'
        schedule:
-         interval: "weekly"
+         interval: 'weekly'
        reviewers:
-         - "mrkingsleyobi"
+         - 'mrkingsleyobi'
        labels:
-         - "dependencies"
-         - "docker"
+         - 'dependencies'
+         - 'docker'
    ```
 
 4. **Add dependency scanning to CI**
+
    ```yaml
    # .github/workflows/security.yml
    name: Security Scanning
 
    on:
      schedule:
-       - cron: '0 0 * * 1'  # Weekly on Monday
+       - cron: '0 0 * * 1' # Weekly on Monday
      push:
        branches: [main]
      pull_request:
@@ -1153,6 +1226,7 @@ Fix: npm audit fix
 ### Current State
 
 **Performance Features:**
+
 - Prisma ORM with connection pooling (default)
 - Database indexes on frequently queried fields
 - Rate limiting to prevent abuse
@@ -1163,6 +1237,7 @@ Fix: npm audit fix
 #### 🟡 MEDIUM: No Caching Strategy
 
 **Missing:**
+
 - Redis/Memcached for caching
 - API response caching
 - Database query caching
@@ -1171,6 +1246,7 @@ Fix: npm audit fix
 #### 🟡 MEDIUM: No CDN Configuration
 
 **Missing:**
+
 - Static asset CDN
 - Frontend build optimization
 - Image optimization
@@ -1185,6 +1261,7 @@ Fix: npm audit fix
 #### 🟡 MEDIUM: No Load Testing Results
 
 **Missing:**
+
 - Performance benchmarks
 - Capacity planning data
 - Bottleneck identification
@@ -1200,6 +1277,7 @@ Fix: npm audit fix
 **IMMEDIATE ACTIONS (P0):**
 
 1. **Add response compression**
+
    ```bash
    npm install compression
    ```
@@ -1208,18 +1286,21 @@ Fix: npm audit fix
    // src/server.js
    const compression = require('compression');
 
-   app.use(compression({
-     filter: (req, res) => {
-       if (req.headers['x-no-compression']) {
-         return false;
-       }
-       return compression.filter(req, res);
-     },
-     level: 6
-   }));
+   app.use(
+     compression({
+       filter: (req, res) => {
+         if (req.headers['x-no-compression']) {
+           return false;
+         }
+         return compression.filter(req, res);
+       },
+       level: 6,
+     })
+   );
    ```
 
 2. **Implement Redis caching**
+
    ```bash
    npm install redis
    ```
@@ -1238,8 +1319,8 @@ Fix: npm audit fix
            return new Error('Redis connection failed');
          }
          return retries * 100;
-       }
-     }
+       },
+     },
    });
 
    client.on('error', (err) => logger.error('Redis error', err));
@@ -1273,7 +1354,7 @@ Fix: npm audit fix
          }
 
          const originalJson = res.json;
-         res.json = function(data) {
+         res.json = function (data) {
            client.setEx(key, duration, JSON.stringify(data));
            originalJson.call(this, data);
          };
@@ -1290,6 +1371,7 @@ Fix: npm audit fix
    ```
 
 3. **Tune database connection pool**
+
    ```javascript
    // prisma/schema.prisma
    datasource db {
@@ -1302,6 +1384,7 @@ Fix: npm audit fix
    ```
 
 4. **Add load balancer configuration**
+
    ```nginx
    # nginx.conf (example for production)
    upstream jobnaut_backend {
@@ -1360,6 +1443,7 @@ Fix: npm audit fix
    ```
 
 5. **Create k6 load test**
+
    ```javascript
    // tests/load/api-load-test.js
    import http from 'k6/http';
@@ -1367,15 +1451,15 @@ Fix: npm audit fix
 
    export let options = {
      stages: [
-       { duration: '2m', target: 50 },   // Ramp up to 50 users
-       { duration: '5m', target: 50 },   // Stay at 50 users
-       { duration: '2m', target: 100 },  // Ramp up to 100 users
-       { duration: '5m', target: 100 },  // Stay at 100 users
-       { duration: '2m', target: 0 },    // Ramp down to 0 users
+       { duration: '2m', target: 50 }, // Ramp up to 50 users
+       { duration: '5m', target: 50 }, // Stay at 50 users
+       { duration: '2m', target: 100 }, // Ramp up to 100 users
+       { duration: '5m', target: 100 }, // Stay at 100 users
+       { duration: '2m', target: 0 }, // Ramp down to 0 users
      ],
      thresholds: {
-       http_req_duration: ['p(95)<500'],  // 95% of requests under 500ms
-       http_req_failed: ['rate<0.01'],    // Less than 1% errors
+       http_req_duration: ['p(95)<500'], // 95% of requests under 500ms
+       http_req_failed: ['rate<0.01'], // Less than 1% errors
      },
    };
 
@@ -1411,6 +1495,7 @@ Fix: npm audit fix
 #### 🔴 CRITICAL: No Database Backup Strategy
 
 **Missing:**
+
 - Automated backups
 - Backup verification
 - Point-in-time recovery
@@ -1425,6 +1510,7 @@ Fix: npm audit fix
 #### 🟡 MEDIUM: No Database Monitoring
 
 **Missing:**
+
 - Query performance monitoring
 - Slow query logging
 - Connection pool metrics
@@ -1435,11 +1521,13 @@ Fix: npm audit fix
 **IMMEDIATE ACTIONS (P0):**
 
 1. **Create initial migration**
+
    ```bash
    npx prisma migrate dev --name initial_schema
    ```
 
 2. **Implement backup strategy**
+
    ```bash
    # scripts/backup-database.sh
    #!/bin/bash
@@ -1558,6 +1646,7 @@ Fix: npm audit fix
 ### Infrastructure Requirements
 
 **Minimum Production Setup:**
+
 - **Compute:** 2x instances (for redundancy)
   - 2 vCPU, 4GB RAM per instance
   - Auto-scaling enabled
@@ -1604,6 +1693,7 @@ Fix: npm audit fix
 ### Cost Estimation (AWS)
 
 **Monthly Costs (Estimate):**
+
 - Compute (2x t3.medium): $60-70
 - RDS PostgreSQL (db.t3.small): $50-60
 - ElastiCache Redis: $40-50
@@ -1612,6 +1702,7 @@ Fix: npm audit fix
 - **Total: ~$180-225/month**
 
 **For production-grade setup:**
+
 - Compute (2x t3.large): $120-140
 - RDS PostgreSQL (db.t3.medium, Multi-AZ): $120-150
 - ElastiCache Redis (cache.t3.small): $50-70
@@ -1622,30 +1713,32 @@ Fix: npm audit fix
 
 ## 12. Risk Assessment Matrix
 
-| Risk | Severity | Probability | Impact | Mitigation Priority |
-|------|----------|-------------|--------|-------------------|
-| Exposed production credentials | CRITICAL | HIGH | Catastrophic | P0 - Immediate |
-| No error monitoring | HIGH | HIGH | High | P0 - Immediate |
-| Missing backups | CRITICAL | MEDIUM | Catastrophic | P0 - Immediate |
-| CORS misconfiguration | HIGH | HIGH | High | P0 - Immediate |
-| No HTTPS enforcement | HIGH | MEDIUM | High | P0 - Immediate |
-| No actual deployment | HIGH | HIGH | High | P0 - Immediate |
-| Database port exposed | MEDIUM | MEDIUM | Medium | P1 - High |
-| Missing monitoring | HIGH | HIGH | High | P1 - High |
-| No caching strategy | MEDIUM | LOW | Medium | P2 - Medium |
-| Console logs in prod | MEDIUM | HIGH | Low | P2 - Medium |
-| No load testing | MEDIUM | MEDIUM | Medium | P3 - Low |
+| Risk                           | Severity | Probability | Impact       | Mitigation Priority |
+| ------------------------------ | -------- | ----------- | ------------ | ------------------- |
+| Exposed production credentials | CRITICAL | HIGH        | Catastrophic | P0 - Immediate      |
+| No error monitoring            | HIGH     | HIGH        | High         | P0 - Immediate      |
+| Missing backups                | CRITICAL | MEDIUM      | Catastrophic | P0 - Immediate      |
+| CORS misconfiguration          | HIGH     | HIGH        | High         | P0 - Immediate      |
+| No HTTPS enforcement           | HIGH     | MEDIUM      | High         | P0 - Immediate      |
+| No actual deployment           | HIGH     | HIGH        | High         | P0 - Immediate      |
+| Database port exposed          | MEDIUM   | MEDIUM      | Medium       | P1 - High           |
+| Missing monitoring             | HIGH     | HIGH        | High         | P1 - High           |
+| No caching strategy            | MEDIUM   | LOW         | Medium       | P2 - Medium         |
+| Console logs in prod           | MEDIUM   | HIGH        | Low          | P2 - Medium         |
+| No load testing                | MEDIUM   | MEDIUM      | Medium       | P3 - Low            |
 
 ---
 
 ## 13. Summary & Next Steps
 
 ### Current Status
+
 JobNaut is **NOT READY** for production deployment in its current state. While the application has solid foundations with good security practices and proper architecture, several critical issues must be addressed.
 
 ### Immediate Actions (Next 1-2 Weeks)
 
 **Week 1: Security & Secrets**
+
 1. Remove all hardcoded credentials from repository
 2. Implement secrets management
 3. Fix CORS configuration
@@ -1653,6 +1746,7 @@ JobNaut is **NOT READY** for production deployment in its current state. While t
 5. Fix known vulnerabilities
 
 **Week 2: Monitoring & Deployment**
+
 1. Set up error tracking (Sentry)
 2. Implement comprehensive health checks
 3. Set up logging infrastructure
@@ -1681,6 +1775,7 @@ JobNaut is **NOT READY** for production deployment in its current state. While t
 ## 14. Conclusion
 
 JobNaut shows promise as a well-architected application with good development practices. The codebase demonstrates:
+
 - Strong security awareness
 - Proper error handling patterns
 - Good containerization

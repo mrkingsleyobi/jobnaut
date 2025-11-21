@@ -22,7 +22,7 @@ const createContext = async (opts) => {
   const user = opts?.req?.user;
 
   return {
-    user: user || null
+    user: user || null,
   };
 };
 
@@ -41,7 +41,7 @@ const authMiddleware = t.middleware(async ({ ctx, next }) => {
   return next({
     ctx: {
       ...ctx,
-      user: ctx.user
+      user: ctx.user,
     },
   });
 });

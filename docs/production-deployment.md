@@ -1,10 +1,13 @@
 # JobNaut Production Deployment Guide
 
 ## Overview
+
 This guide provides detailed instructions for deploying JobNaut to production environments. The application consists of a backend API service and a frontend web application that can be deployed separately or together using Docker containers.
 
 ## Prerequisites
+
 Before deploying, ensure you have:
+
 1. Docker and Docker Compose installed
 2. A PostgreSQL database (version 12 or higher)
 3. Clerk account credentials for authentication
@@ -14,6 +17,7 @@ Before deploying, ensure you have:
 ## Production Environment Setup
 
 ### 1. Backend Environment Configuration
+
 Create a production environment file for the backend:
 
 ```bash
@@ -35,6 +39,7 @@ EOF
 ```
 
 ### 2. Frontend Environment Configuration
+
 Create a production environment file for the frontend:
 
 ```bash
@@ -51,6 +56,7 @@ EOF
 ## Docker Deployment (Recommended)
 
 ### 1. Build and Push Docker Images
+
 ```bash
 # Build backend image
 docker build -t jobnaut/backend:latest .
@@ -64,6 +70,7 @@ docker push jobnaut/frontend:latest
 ```
 
 ### 2. Production Docker Compose Setup
+
 Create a production docker-compose file:
 
 ```yaml
@@ -79,11 +86,11 @@ services:
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: ${DB_NAME}
     ports:
-      - "5432:5432"
+      - '5432:5432'
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      test: ['CMD-SHELL', 'pg_isready -U ${DB_USER} -d ${DB_NAME}']
       interval: 10s
       timeout: 5s
       retries: 5
@@ -94,7 +101,7 @@ services:
     image: jobnaut/backend:latest
     container_name: jobnaut-backend-prod
     ports:
-      - "3000:3000"
+      - '3000:3000'
     environment:
       - DATABASE_URL=postgresql://${DB_USER}:${DB_PASSWORD}@database:5432/${DB_NAME}
       - NODE_ENV=production
@@ -111,7 +118,7 @@ services:
     image: jobnaut/frontend:latest
     container_name: jobnaut-frontend-prod
     ports:
-      - "3001:3000"
+      - '3001:3000'
     environment:
       - NODE_ENV=production
       - API_BASE_URL=http://backend:3000
@@ -124,7 +131,7 @@ services:
     image: getmeili/meilisearch:v1.13
     container_name: jobnaut-meilisearch-prod
     ports:
-      - "7700:7700"
+      - '7700:7700'
     environment:
       - MEILI_MASTER_KEY=${MEILI_MASTER_KEY}
       - MEILI_ENV=production
@@ -138,6 +145,7 @@ volumes:
 ```
 
 ### 3. Deploy Using Docker Compose
+
 ```bash
 # Create environment file for docker-compose
 cat > .env.prod << EOF
@@ -159,12 +167,14 @@ docker-compose -f docker-compose.prod.yml exec backend npm run prisma:migrate
 ## CI/CD Pipeline Deployment
 
 ### GitHub Actions Workflow
+
 The project includes automated CI/CD pipelines:
 
 1. **CI Pipeline**: Runs tests and builds on every push
 2. **CD Pipeline**: Automatically deploys to production on main branch pushes
 
 To enable automatic deployment:
+
 1. Set up Docker Hub credentials as GitHub secrets:
    - `DOCKERHUB_USERNAME`
    - `DOCKERHUB_TOKEN`
@@ -178,11 +188,14 @@ To enable automatic deployment:
 ## Monitoring and Health Checks
 
 ### Health Check Endpoints
+
 - Backend: `GET /health`
 - Frontend: `GET /health`
 
 ### Monitoring Setup
+
 1. **Application Logs**:
+
    ```bash
    docker-compose logs -f backend
    docker-compose logs -f frontend
@@ -202,18 +215,23 @@ To enable automatic deployment:
 ## Security Best Practices
 
 ### 1. Environment Variables
+
 Never commit sensitive environment variables to version control. Use secret management or environment files that are excluded from version control.
 
 ### 2. HTTPS Configuration
+
 Always use HTTPS in production with valid SSL certificates.
 
 ### 3. CORS Configuration
+
 Configure CORS settings appropriately for your production domain.
 
 ### 4. Rate Limiting
+
 The application includes built-in rate limiting. Configure limits based on your expected traffic.
 
 ### 5. Security Headers
+
 The application uses Helmet.js for security headers. Review and customize as needed.
 
 ## Post-Deployment Validation
@@ -234,6 +252,7 @@ After deployment, verify that:
 In case of deployment issues:
 
 1. **Rollback Database Migrations**:
+
    ```bash
    npx prisma migrate resolve --rolled-back "migration_name"
    ```

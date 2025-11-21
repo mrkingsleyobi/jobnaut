@@ -1,9 +1,11 @@
 # Phase 1: Foundation (Weeks 1-2)
 
 ## Overview
+
 Implement the foundational components of JobNaut including user authentication, profile management, and database schema.
 
 ## Tasks
+
 1. Set up development environment
 2. Configure repository structure
 3. Implement user authentication with Clerk/Auth.js
@@ -14,12 +16,14 @@ Implement the foundational components of JobNaut including user authentication, 
 8. Achieve 100% test coverage for implemented features
 
 ## Technology Stack
+
 - Clerk/Auth.js for authentication
 - PostgreSQL with Prisma ORM
 - tRPC for API layer
 - Jest for testing
 
 ## Deliverables
+
 - Working user authentication system
 - User profile CRUD operations
 - Database schema implementation
@@ -28,6 +32,7 @@ Implement the foundational components of JobNaut including user authentication, 
 - Documentation for implemented features
 
 ## Success Criteria
+
 - [ ] User can register and login
 - [ ] User can create and edit profile
 - [ ] Database schema matches design
@@ -37,9 +42,11 @@ Implement the foundational components of JobNaut including user authentication, 
 - [ ] Documentation complete
 
 ## Dependencies
+
 - Repository setup
 - Development environment configuration
 
 ## Related Issues
+
 - Blocks: Phase 2 Data Pipeline
 - Part of: Epic #1 - JobNaut MVP Implementation

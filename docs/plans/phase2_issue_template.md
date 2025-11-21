@@ -1,9 +1,11 @@
 # Phase 2: Data Pipeline (Weeks 3-4)
 
 ## Overview
+
 Implement the job data pipeline including API integration, NLP processing, and search indexing.
 
 ## Tasks
+
 1. Integrate JSearch API for job data fetching
 2. Implement job data model
 3. Create Python service for NLP processing
@@ -14,6 +16,7 @@ Implement the job data pipeline including API integration, NLP processing, and s
 8. Achieve 100% test coverage for implemented features
 
 ## Technology Stack
+
 - JSearch API for job data
 - Python FastAPI for NLP service
 - Transformers (Hugging Face) for NER
@@ -21,6 +24,7 @@ Implement the job data pipeline including API integration, NLP processing, and s
 - Pytest for testing
 
 ## Deliverables
+
 - Working job data ingestion pipeline
 - NLP processing service for skill extraction
 - Meilisearch integration
@@ -29,6 +33,7 @@ Implement the job data pipeline including API integration, NLP processing, and s
 - Documentation for implemented features
 
 ## Success Criteria
+
 - [ ] Job data successfully fetched from JSearch API
 - [ ] NLP processing extracts skills correctly
 - [ ] Meilisearch indexing functional
@@ -38,10 +43,12 @@ Implement the job data pipeline including API integration, NLP processing, and s
 - [ ] Documentation complete
 
 ## Dependencies
+
 - Phase 1: Foundation
 - Database schema implementation
 
 ## Related Issues
+
 - Blocked by: Phase 1 Foundation
 - Blocks: Phase 3 Frontend Development
 - Part of: Epic #1 - JobNaut MVP Implementation
