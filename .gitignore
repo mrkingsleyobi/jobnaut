@@ -402,3 +402,7 @@ vite.config.*.timestamp-*.*
 *.config.json
 *.config.yml
 *.config.yaml
+
+# Production environment files
+.env.production
+frontend/.env.production
