@@ -31,8 +31,12 @@ services:
       - PORT=3000
       - CLERK_SECRET_KEY=your_clerk_secret_key
       - ENCRYPTION_KEY=jobnaut_secure_encryption_key_for_development_environment_32bytes!
+      - REDIS_URL=redis://redis:6379
+      - REDIS_TTL=300
     depends_on:
       database:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     volumes:
       - .:/app
@@ -68,6 +72,22 @@ services:
     volumes:
       - meilisearch_data:/meili_data
 
+  # Redis Cache Service
+  redis:
+    image: redis:7-alpine
+    container_name: jobnaut-redis
+    ports:
+      - '6379:6379'
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
 volumes:
   postgres_data:
   meilisearch_data:
+  redis_data:

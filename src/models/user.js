@@ -4,8 +4,7 @@
 const prisma =
   process.env.NODE_ENV === 'test' ? require('../db/testClient') : require('../db/client');
 const encryptionService = require('../services/encryption');
-const NodeCache = require('node-cache');
-const userCache = new NodeCache({ stdTTL: 300 }); // 5 minutes TTL
+const cacheService = require('../services/cacheService');
 
 /**
  * Decrypt user fields
@@ -90,7 +89,7 @@ class UserService {
    */
   async getUserById(id) {
     const cacheKey = `user_${id}`;
-    const cached = userCache.get(cacheKey);
+    const cached = await cacheService.get(cacheKey);
 
     if (cached) {
       return cached;
@@ -105,7 +104,7 @@ class UserService {
 
     if (decryptedUser) {
       // Cache the decrypted user data
-      userCache.set(cacheKey, decryptedUser);
+      await cacheService.set(cacheKey, decryptedUser);
     }
 
     return decryptedUser;
@@ -118,7 +117,7 @@ class UserService {
    */
   async getUserByClerkId(clerkId) {
     const cacheKey = `user_clerk_${clerkId}`;
-    const cached = userCache.get(cacheKey);
+    const cached = await cacheService.get(cacheKey);
 
     if (cached) {
       return cached;
@@ -133,7 +132,7 @@ class UserService {
 
     if (decryptedUser) {
       // Cache the decrypted user data
-      userCache.set(cacheKey, decryptedUser);
+      await cacheService.set(cacheKey, decryptedUser);
     }
 
     return decryptedUser;
@@ -146,7 +145,7 @@ class UserService {
    */
   async getUserByEmail(email) {
     const cacheKey = `user_email_${email}`;
-    const cached = userCache.get(cacheKey);
+    const cached = await cacheService.get(cacheKey);
 
     if (cached) {
       return cached;
@@ -161,7 +160,7 @@ class UserService {
 
     if (decryptedUser) {
       // Cache the decrypted user data
-      userCache.set(cacheKey, decryptedUser);
+      await cacheService.set(cacheKey, decryptedUser);
     }
 
     return decryptedUser;
@@ -206,9 +205,11 @@ class UserService {
     const decryptedUser = decryptUserFields(updatedUser);
 
     // Invalidate cache for this user
-    userCache.del(`user_${id}`);
-    userCache.del(`user_clerk_${updatedUser.clerkId}`);
-    userCache.del(`user_email_${updatedUser.email}`);
+    await cacheService.delMultiple([
+      `user_${id}`,
+      `user_clerk_${updatedUser.clerkId}`,
+      `user_email_${updatedUser.email}`,
+    ]);
 
     return decryptedUser;
   }
@@ -230,9 +231,11 @@ class UserService {
 
     // Invalidate cache for this user
     if (user) {
-      userCache.del(`user_${id}`);
-      userCache.del(`user_clerk_${user.clerkId}`);
-      userCache.del(`user_email_${user.email}`);
+      await cacheService.delMultiple([
+        `user_${id}`,
+        `user_clerk_${user.clerkId}`,
+        `user_email_${user.email}`,
+      ]);
     }
 
     return deletedUser;

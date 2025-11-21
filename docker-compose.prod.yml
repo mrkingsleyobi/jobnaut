@@ -45,13 +45,18 @@ services:
       - db_name
       - clerk_secret_key
       - encryption_key
+      - redis_password
     environment:
       - NODE_ENV=production
       - PORT=3000
       # Database URL constructed from secrets at runtime
       - DATABASE_URL=postgresql://$(cat /run/secrets/db_user):$(cat /run/secrets/db_password)@database:5432/$(cat /run/secrets/db_name)
+      - REDIS_URL=redis://:$(cat /run/secrets/redis_password)@redis:6379
+      - REDIS_TTL=300
     depends_on:
       database:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     restart: unless-stopped
     deploy:
@@ -107,9 +112,37 @@ services:
           cpus: '0.25'
           memory: 256M
 
+  # Redis Cache Service
+  redis:
+    image: redis:7-alpine
+    container_name: jobnaut-redis-prod
+    # Redis should NOT be exposed to host - only accessible within Docker network
+    # ports:
+    #   - "6379:6379"  # REMOVED FOR SECURITY
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru --requirepass $(cat /run/secrets/redis_password)
+    secrets:
+      - redis_password
+    healthcheck:
+      test: ['CMD', 'redis-cli', '--pass', '$(cat /run/secrets/redis_password)', 'ping']
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
+
 volumes:
   postgres_data:
   meilisearch_data:
+  redis_data:
 
 secrets:
   db_user:
@@ -124,3 +157,5 @@ secrets:
     file: ./secrets/encryption_key.txt
   meili_master_key:
     file: ./secrets/meili_master_key.txt
+  redis_password:
+    file: ./secrets/redis_password.txt

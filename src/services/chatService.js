@@ -9,13 +9,10 @@ const { createAnthropic } = require('@ai-sdk/anthropic');
 // Configuration
 const aiConfig = require('../config/aiConfig');
 const logger = require('../utils/logger');
+const cacheService = require('./cacheService');
 
 class ChatService {
   constructor() {
-    // In a real implementation, you would initialize database connections or external APIs here
-    // For now, we'll use in-memory storage for demonstration
-    this.conversations = new Map(); // userId -> array of messages
-
     // Initialize AI providers
     this.initializeAIProviders();
   }
@@ -51,9 +48,9 @@ class ChatService {
    */
   async getConversationHistory(userId) {
     try {
-      // In a real implementation, this would fetch from a database
-      const history = this.conversations.get(userId) || [];
-      return history;
+      const cacheKey = `conversation_${userId}`;
+      const history = await cacheService.get(cacheKey);
+      return history || [];
     } catch (error) {
       logger.error('Error fetching conversation history', { error: error.message, stack: error.stack, userId });
       throw new Error('Failed to fetch conversation history');
@@ -68,12 +65,9 @@ class ChatService {
    */
   async sendMessage(userId, message) {
     try {
-      // Initialize conversation history if it doesn't exist
-      if (!this.conversations.has(userId)) {
-        this.conversations.set(userId, []);
-      }
-
-      const conversation = this.conversations.get(userId);
+      // Get conversation history from Redis cache
+      const cacheKey = `conversation_${userId}`;
+      let conversation = await cacheService.get(cacheKey) || [];
 
       // Add user message to history
       const userMessage = {
@@ -98,6 +92,9 @@ class ChatService {
       // Add AI response to history
       conversation.push(aiMessage);
 
+      // Store conversation in Redis cache with 1 hour TTL
+      await cacheService.set(cacheKey, conversation, 3600);
+
       return aiMessage;
     } catch (error) {
       logger.error('Error sending message', { error: error.message, stack: error.stack, userId });
@@ -112,8 +109,8 @@ class ChatService {
    */
   async clearHistory(userId) {
     try {
-      // In a real implementation, this would delete from a database
-      this.conversations.delete(userId);
+      const cacheKey = `conversation_${userId}`;
+      await cacheService.del(cacheKey);
       return { success: true, message: 'Conversation history cleared' };
     } catch (error) {
       logger.error('Error clearing conversation history', { error: error.message, stack: error.stack, userId });

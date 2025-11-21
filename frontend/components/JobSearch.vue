@@ -74,33 +74,53 @@
 </template>
 
 <script setup>
-import { ref, defineEmits } from 'vue';
+import { computed, watch } from 'vue';
+import { useJobsStore } from '../stores/jobs';
+import { useUIStore } from '../stores/ui';
 
-// Reactive state
-const searchQuery = ref('');
-const locationFilter = ref('');
-const experienceFilter = ref('');
-const jobTypeFilter = ref('');
+// Stores
+const jobsStore = useJobsStore();
+const uiStore = useUIStore();
 
-// Emits
-const emit = defineEmits(['search', 'clear-filters']);
+// Computed properties from store
+const searchQuery = computed({
+  get: () => jobsStore.filters.query,
+  set: (value) => jobsStore.setFilters({ query: value }),
+});
+
+const locationFilter = computed({
+  get: () => jobsStore.filters.location,
+  set: (value) => jobsStore.setFilters({ location: value }),
+});
+
+const experienceFilter = computed({
+  get: () => jobsStore.filters.experience,
+  set: (value) => jobsStore.setFilters({ experience: value }),
+});
+
+const jobTypeFilter = computed({
+  get: () => jobsStore.filters.jobType,
+  set: (value) => jobsStore.setFilters({ jobType: value }),
+});
 
 // Methods
-const performSearch = () => {
-  emit('search', {
-    query: searchQuery.value,
-    location: locationFilter.value,
-    experience: experienceFilter.value,
-    jobType: jobTypeFilter.value,
-  });
+const performSearch = async () => {
+  try {
+    await jobsStore.searchJobs({
+      query: searchQuery.value,
+      location: locationFilter.value,
+      experience: experienceFilter.value,
+      jobType: jobTypeFilter.value,
+    });
+    uiStore.showSuccess(`Found ${jobsStore.jobCount} jobs`);
+  } catch (error) {
+    uiStore.showError('Failed to search jobs');
+  }
 };
 
 const clearFilters = () => {
-  searchQuery.value = '';
-  locationFilter.value = '';
-  experienceFilter.value = '';
-  jobTypeFilter.value = '';
-  emit('clear-filters');
+  jobsStore.clearFilters();
+  uiStore.showInfo('Filters cleared');
 };
 </script>
 

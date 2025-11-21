@@ -40,8 +40,9 @@
 </template>
 
 <script>
-import { ref, onMounted, nextTick } from 'vue';
-import chatService from '../../services/chatService';
+import { ref, computed, onMounted, nextTick } from 'vue';
+import { useChatStore } from '../../stores/chat';
+import { useUIStore } from '../../stores/ui';
 
 export default {
   name: 'ChatComponent',
@@ -52,32 +53,22 @@ export default {
     },
   },
   setup(props) {
-    const messages = ref([]);
+    const chatStore = useChatStore();
+    const uiStore = useUIStore();
     const newMessage = ref('');
-    const isLoading = ref(false);
     const messagesContainer = ref(null);
+
+    // Computed properties from store
+    const messages = computed(() => chatStore.messages);
+    const isLoading = computed(() => chatStore.loading);
 
     // Load initial messages
     const loadMessages = async () => {
       try {
-        const history = await chatService.getConversationHistory(props.userId);
-        messages.value = history.map((msg) => ({
-          ...msg,
-          createdAt: new Date(msg.createdAt),
-        }));
+        await chatStore.loadMessages(props.userId);
         scrollToBottom();
       } catch (error) {
-        console.error('Error loading messages:', error);
-        // Fallback to welcome message
-        messages.value = [
-          {
-            id: 1,
-            role: 'assistant',
-            content:
-              "Hello! I'm your AI Career Coach. How can I help you with your job search today?",
-            createdAt: new Date(Date.now() - 3600000), // 1 hour ago
-          },
-        ];
+        uiStore.showError('Failed to load chat history');
       }
     };
 
@@ -99,47 +90,16 @@ export default {
     const sendMessage = async () => {
       if (!newMessage.value.trim() || isLoading.value) return;
 
-      const userMessage = {
-        id: Date.now(),
-        role: 'user',
-        content: newMessage.value,
-        createdAt: new Date(),
-      };
-
-      // Add user message to chat
-      messages.value.push(userMessage);
-      scrollToBottom();
-
-      // Clear input
       const messageToSend = newMessage.value;
       newMessage.value = '';
 
-      // Show loading indicator
-      isLoading.value = true;
       scrollToBottom();
 
       try {
-        const aiMessage = await chatService.sendMessage(props.userId, messageToSend);
-
-        // Add AI response to messages
-        messages.value.push({
-          ...aiMessage,
-          createdAt: new Date(aiMessage.createdAt),
-        });
+        await chatStore.sendMessage(props.userId, messageToSend);
+        scrollToBottom();
       } catch (error) {
-        console.error('Error sending message:', error);
-
-        // Show error message
-        const errorMessage = {
-          id: Date.now() + 1,
-          role: 'assistant',
-          content: 'Sorry, I encountered an error processing your request. Please try again.',
-          createdAt: new Date(),
-        };
-
-        messages.value.push(errorMessage);
-      } finally {
-        isLoading.value = false;
+        uiStore.showError('Failed to send message');
         scrollToBottom();
       }
     };
@@ -148,11 +108,10 @@ export default {
     const clearHistory = async () => {
       if (confirm('Are you sure you want to clear the chat history?')) {
         try {
-          await chatService.clearHistory(props.userId);
-          // Reload messages to show welcome message
-          await loadMessages();
+          await chatStore.clearHistory(props.userId);
+          uiStore.showSuccess('Chat history cleared');
         } catch (error) {
-          console.error('Error clearing history:', error);
+          uiStore.showError('Failed to clear chat history');
         }
       }
     };

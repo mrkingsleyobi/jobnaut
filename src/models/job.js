@@ -3,8 +3,7 @@
 
 const prisma =
   process.env.NODE_ENV === 'test' ? require('../db/testClient') : require('../db/client');
-const NodeCache = require('node-cache');
-const cache = new NodeCache({ stdTTL: 300 }); // 5 minutes TTL
+const cacheService = require('../services/cacheService');
 
 /**
  * Job model service
@@ -35,8 +34,8 @@ class JobService {
       },
     });
 
-    // Invalidate all cache to ensure search results are fresh
-    cache.flushAll();
+    // Invalidate all search cache to ensure search results are fresh
+    await cacheService.invalidate('search_*');
 
     return createdJob;
   }
@@ -48,7 +47,7 @@ class JobService {
    */
   async getJobById(id) {
     const cacheKey = `job_${id}`;
-    const cached = cache.get(cacheKey);
+    const cached = await cacheService.get(cacheKey);
 
     if (cached) {
       return cached;
@@ -59,7 +58,7 @@ class JobService {
     });
 
     if (job) {
-      cache.set(cacheKey, job);
+      await cacheService.set(cacheKey, job);
     }
 
     return job;
@@ -108,7 +107,7 @@ class JobService {
 
     // Create cache key for search results
     const cacheKey = `search_${query}_${page}_${limit}`;
-    const cached = cache.get(cacheKey);
+    const cached = await cacheService.get(cacheKey);
 
     if (cached) {
       return cached;
@@ -151,7 +150,7 @@ class JobService {
     };
 
     // Cache the search results
-    cache.set(cacheKey, result);
+    await cacheService.set(cacheKey, result);
 
     return result;
   }
@@ -174,8 +173,8 @@ class JobService {
     });
 
     // Invalidate cache for this job and all search results
-    cache.del(`job_${id}`);
-    cache.flushAll(); // Clear all cache to ensure search results are fresh
+    await cacheService.del(`job_${id}`);
+    await cacheService.invalidate('search_*'); // Clear search cache to ensure results are fresh
 
     return updatedJob;
   }
@@ -191,8 +190,8 @@ class JobService {
     });
 
     // Invalidate cache for this job and all search results
-    cache.del(`job_${id}`);
-    cache.flushAll(); // Clear all cache to ensure search results are fresh
+    await cacheService.del(`job_${id}`);
+    await cacheService.invalidate('search_*'); // Clear search cache to ensure results are fresh
 
     return deletedJob;
   }
