@@ -49,7 +49,7 @@ jest.mock('../../src/services/encryption', () => {
         return encryptedData;
       }
       return encryptedData;
-    })
+    }),
   };
 });
 
@@ -69,7 +69,7 @@ describe('User Model', () => {
       experienceLevel: 'mid',
       skills: ['JavaScript', 'Node.js'],
       createdAt: new Date(),
-      updatedAt: new Date()
+      updatedAt: new Date(),
     };
 
     // Reset all mocks
@@ -85,7 +85,7 @@ describe('User Model', () => {
         name: 'Test User',
         location: 'New York',
         experienceLevel: 'mid',
-        skills: ['JavaScript', 'Node.js']
+        skills: ['JavaScript', 'Node.js'],
       };
 
       prisma.user.create.mockResolvedValue(mockUser);
@@ -102,7 +102,7 @@ describe('User Model', () => {
           location: userData.location,
           experienceLevel: userData.experienceLevel,
           skills: '["JavaScript","Node.js"]',
-        }
+        },
       });
       expect(result).toEqual(mockUser);
     });
@@ -111,7 +111,7 @@ describe('User Model', () => {
       // Arrange
       const userData = {
         clerkId: 'clerk_test_123',
-        email: 'test@example.com'
+        email: 'test@example.com',
       };
 
       const error = new Error('Database error');
@@ -127,7 +127,7 @@ describe('User Model', () => {
           location: undefined,
           experienceLevel: undefined,
           skills: null,
-        }
+        },
       });
     });
   });
@@ -142,7 +142,7 @@ describe('User Model', () => {
 
       // Assert
       expect(prisma.user.findUnique).toHaveBeenCalledWith({
-        where: { id: 1 }
+        where: { id: 1 },
       });
       expect(result).toEqual(mockUser);
     });
@@ -156,7 +156,7 @@ describe('User Model', () => {
 
       // Assert
       expect(prisma.user.findUnique).toHaveBeenCalledWith({
-        where: { id: 999 }
+        where: { id: 999 },
       });
       expect(result).toBeNull();
     });
@@ -181,7 +181,7 @@ describe('User Model', () => {
 
       // Assert
       expect(prisma.user.findUnique).toHaveBeenCalledWith({
-        where: { clerkId: 'clerk_test_123' }
+        where: { clerkId: 'clerk_test_123' },
       });
       expect(result).toEqual(mockUser);
     });
@@ -195,7 +195,7 @@ describe('User Model', () => {
 
       // Assert
       expect(prisma.user.findUnique).toHaveBeenCalledWith({
-        where: { clerkId: 'nonexistent_clerk_id' }
+        where: { clerkId: 'nonexistent_clerk_id' },
       });
       expect(result).toBeNull();
     });
@@ -207,7 +207,7 @@ describe('User Model', () => {
       const updateData = {
         name: 'Updated Name',
         location: 'San Francisco',
-        experienceLevel: 'senior'
+        experienceLevel: 'senior',
       };
 
       const updatedUser = { ...mockUser, ...updateData };
@@ -219,7 +219,7 @@ describe('User Model', () => {
       // Assert
       expect(prisma.user.update).toHaveBeenCalledWith({
         where: { id: 1 },
-        data: updateData
+        data: updateData,
       });
       expect(result).toEqual(updatedUser);
     });
@@ -248,7 +248,7 @@ describe('User Model', () => {
     it('should convert skills array to JSON string when updating', async () => {
       // Arrange
       const updateData = {
-        skills: ['JavaScript', 'React', 'Node.js']
+        skills: ['JavaScript', 'React', 'Node.js'],
       };
 
       const updatedUser = { ...mockUser, skills: ['JavaScript', 'React', 'Node.js'] };
@@ -261,8 +261,8 @@ describe('User Model', () => {
       expect(prisma.user.update).toHaveBeenCalledWith({
         where: { id: 1 },
         data: {
-          skills: '["JavaScript","React","Node.js"]'
-        }
+          skills: '["JavaScript","React","Node.js"]',
+        },
       });
       expect(result).toEqual(updatedUser);
     });
@@ -278,7 +278,7 @@ describe('User Model', () => {
 
       // Assert
       expect(prisma.user.delete).toHaveBeenCalledWith({
-        where: { id: 1 }
+        where: { id: 1 },
       });
       expect(result).toEqual(mockUser);
     });

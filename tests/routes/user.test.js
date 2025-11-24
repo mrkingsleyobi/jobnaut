@@ -31,7 +31,7 @@ const setupTestEnvironment = (authMiddlewareMock = null) => {
   if (authMiddlewareMock) {
     jest.mock('../../src/auth/middleware', () => {
       return {
-        authMiddleware: authMiddlewareMock
+        authMiddleware: authMiddlewareMock,
       };
     });
   }
@@ -62,7 +62,7 @@ describe('User Profile Management Routes', () => {
         experienceLevel: 'mid',
         skills: ['JavaScript', 'Node.js'],
         createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
+        updatedAt: new Date().toISOString(),
       };
 
       // Setup test environment with auth middleware
@@ -83,7 +83,7 @@ describe('User Profile Management Routes', () => {
       expect(userProfileService.getProfile).toHaveBeenCalledWith(1);
       expect(response.status).toBe(200);
       expect(response.body).toEqual({
-        profile: mockUser
+        profile: mockUser,
       });
     });
 
@@ -94,13 +94,12 @@ describe('User Profile Management Routes', () => {
       });
 
       // Act
-      const response = await request(app)
-        .get('/api/v1/user/profile');
+      const response = await request(app).get('/api/v1/user/profile');
 
       // Assert
       expect(response.status).toBe(401);
       expect(response.body).toEqual({
-        error: 'Unauthorized: No valid token provided'
+        error: 'Unauthorized: No valid token provided',
       });
     });
 
@@ -125,7 +124,7 @@ describe('User Profile Management Routes', () => {
       // Assert
       expect(response.status).toBe(500);
       expect(response.body).toEqual({
-        error: 'Failed to fetch profile'
+        error: 'Failed to fetch profile',
       });
     });
   });
@@ -137,7 +136,7 @@ describe('User Profile Management Routes', () => {
         name: 'Updated Name',
         location: 'San Francisco',
         experienceLevel: 'senior',
-        skills: ['JavaScript', 'Node.js', 'React']
+        skills: ['JavaScript', 'Node.js', 'React'],
       };
 
       const mockUpdatedUser = {
@@ -149,7 +148,7 @@ describe('User Profile Management Routes', () => {
         experienceLevel: 'senior',
         skills: ['JavaScript', 'Node.js', 'React'],
         createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
+        updatedAt: new Date().toISOString(),
       };
 
       // Setup test environment with auth middleware
@@ -171,14 +170,14 @@ describe('User Profile Management Routes', () => {
       expect(userProfileService.updateProfile).toHaveBeenCalledWith(1, profileData);
       expect(response.status).toBe(200);
       expect(response.body).toEqual({
-        profile: mockUpdatedUser
+        profile: mockUpdatedUser,
       });
     });
 
     it('should return 400 for skills validation error', async () => {
       // Arrange
       const invalidData = {
-        skills: 'not_an_array'
+        skills: 'not_an_array',
       };
 
       // Setup test environment with auth middleware
@@ -216,7 +215,7 @@ describe('User Profile Management Routes', () => {
       // Assert
       expect(response.status).toBe(401);
       expect(response.body).toEqual({
-        error: 'Unauthorized: No valid token provided'
+        error: 'Unauthorized: No valid token provided',
       });
     });
 
@@ -243,7 +242,7 @@ describe('User Profile Management Routes', () => {
       // Assert
       expect(response.status).toBe(404);
       expect(response.body).toEqual({
-        error: 'User not found'
+        error: 'User not found',
       });
     });
 
@@ -270,7 +269,7 @@ describe('User Profile Management Routes', () => {
       // Assert
       expect(response.status).toBe(500);
       expect(response.body).toEqual({
-        error: 'Failed to update profile'
+        error: 'Failed to update profile',
       });
     });
   });
@@ -279,7 +278,7 @@ describe('User Profile Management Routes', () => {
     it('should add skills to user profile successfully', async () => {
       // Arrange
       const skillsData = {
-        skills: ['JavaScript', 'Node.js', 'React']
+        skills: ['JavaScript', 'Node.js', 'React'],
       };
 
       const mockUpdatedUser = {
@@ -291,7 +290,7 @@ describe('User Profile Management Routes', () => {
         experienceLevel: 'mid',
         skills: ['JavaScript', 'Node.js', 'React'],
         createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
+        updatedAt: new Date().toISOString(),
       };
 
       // Setup test environment with auth middleware
@@ -313,14 +312,14 @@ describe('User Profile Management Routes', () => {
       expect(userProfileService.addSkills).toHaveBeenCalledWith(1, skillsData.skills);
       expect(response.status).toBe(200);
       expect(response.body).toEqual({
-        profile: mockUpdatedUser
+        profile: mockUpdatedUser,
       });
     });
 
     it('should return 400 for invalid skills array', async () => {
       // Arrange
       const invalidData = {
-        skills: 'not_an_array'
+        skills: 'not_an_array',
       };
 
       // Setup test environment with auth middleware
@@ -358,7 +357,7 @@ describe('User Profile Management Routes', () => {
       // Assert
       expect(response.status).toBe(401);
       expect(response.body).toEqual({
-        error: 'Unauthorized: No valid token provided'
+        error: 'Unauthorized: No valid token provided',
       });
     });
 
@@ -385,7 +384,7 @@ describe('User Profile Management Routes', () => {
       // Assert
       expect(response.status).toBe(404);
       expect(response.body).toEqual({
-        error: 'User not found'
+        error: 'User not found',
       });
     });
 
@@ -412,7 +411,7 @@ describe('User Profile Management Routes', () => {
       // Assert
       expect(response.status).toBe(500);
       expect(response.body).toEqual({
-        error: 'Failed to add skills'
+        error: 'Failed to add skills',
       });
     });
   });
@@ -421,7 +420,7 @@ describe('User Profile Management Routes', () => {
     it('should remove skills from user profile successfully', async () => {
       // Arrange
       const skillsData = {
-        skills: ['JavaScript', 'Node.js']
+        skills: ['JavaScript', 'Node.js'],
       };
 
       const mockUpdatedUser = {
@@ -433,7 +432,7 @@ describe('User Profile Management Routes', () => {
         experienceLevel: 'mid',
         skills: ['React'],
         createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
+        updatedAt: new Date().toISOString(),
       };
 
       // Setup test environment with auth middleware
@@ -455,14 +454,14 @@ describe('User Profile Management Routes', () => {
       expect(userProfileService.removeSkills).toHaveBeenCalledWith(1, skillsData.skills);
       expect(response.status).toBe(200);
       expect(response.body).toEqual({
-        profile: mockUpdatedUser
+        profile: mockUpdatedUser,
       });
     });
 
     it('should return 400 for invalid skills array', async () => {
       // Arrange
       const invalidData = {
-        skills: 'not_an_array'
+        skills: 'not_an_array',
       };
 
       // Setup test environment with auth middleware
@@ -500,7 +499,7 @@ describe('User Profile Management Routes', () => {
       // Assert
       expect(response.status).toBe(401);
       expect(response.body).toEqual({
-        error: 'Unauthorized: No valid token provided'
+        error: 'Unauthorized: No valid token provided',
       });
     });
 
@@ -527,7 +526,7 @@ describe('User Profile Management Routes', () => {
       // Assert
       expect(response.status).toBe(404);
       expect(response.body).toEqual({
-        error: 'User not found'
+        error: 'User not found',
       });
     });
 
@@ -554,7 +553,7 @@ describe('User Profile Management Routes', () => {
       // Assert
       expect(response.status).toBe(500);
       expect(response.body).toEqual({
-        error: 'Failed to remove skills'
+        error: 'Failed to remove skills',
       });
     });
   });

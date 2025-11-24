@@ -6,11 +6,7 @@
     </div>
 
     <div class="chat-messages" ref="messagesContainer">
-      <div
-        v-for="message in messages"
-        :key="message.id"
-        :class="['message', message.role]"
-      >
+      <div v-for="message in messages" :key="message.id" :class="['message', message.role]">
         <div class="message-content">
           <div class="message-text">{{ message.content }}</div>
           <div class="message-timestamp">{{ formatTimestamp(message.createdAt) }}</div>
@@ -36,11 +32,7 @@
         placeholder="Ask for career advice..."
         class="chat-input"
       />
-      <button
-        @click="sendMessage"
-        :disabled="isLoading || !newMessage.trim()"
-        class="send-button"
-      >
+      <button @click="sendMessage" :disabled="isLoading || !newMessage.trim()" class="send-button">
         Send
       </button>
     </div>
@@ -48,126 +40,86 @@
 </template>
 
 <script>
-import { ref, onMounted, nextTick } from 'vue'
-import chatService from '../../services/chatService'
+import { ref, computed, onMounted, nextTick } from 'vue';
+import { useChatStore } from '../../stores/chat';
+import { useUIStore } from '../../stores/ui';
 
 export default {
   name: 'ChatComponent',
   props: {
     userId: {
       type: String,
-      required: true
-    }
+      required: true,
+    },
   },
   setup(props) {
-    const messages = ref([])
-    const newMessage = ref('')
-    const isLoading = ref(false)
-    const messagesContainer = ref(null)
+    const chatStore = useChatStore();
+    const uiStore = useUIStore();
+    const newMessage = ref('');
+    const messagesContainer = ref(null);
+
+    // Computed properties from store
+    const messages = computed(() => chatStore.messages);
+    const isLoading = computed(() => chatStore.loading);
 
     // Load initial messages
     const loadMessages = async () => {
       try {
-        const history = await chatService.getConversationHistory(props.userId)
-        messages.value = history.map(msg => ({
-          ...msg,
-          createdAt: new Date(msg.createdAt)
-        }))
-        scrollToBottom()
+        await chatStore.loadMessages(props.userId);
+        scrollToBottom();
       } catch (error) {
-        console.error('Error loading messages:', error)
-        // Fallback to welcome message
-        messages.value = [
-          {
-            id: 1,
-            role: 'assistant',
-            content: 'Hello! I\'m your AI Career Coach. How can I help you with your job search today?',
-            createdAt: new Date(Date.now() - 3600000) // 1 hour ago
-          }
-        ]
+        uiStore.showError('Failed to load chat history');
       }
-    }
+    };
 
     // Format timestamp for display
     const formatTimestamp = (timestamp) => {
-      return new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-    }
+      return new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    };
 
     // Scroll to bottom of messages
     const scrollToBottom = () => {
       nextTick(() => {
         if (messagesContainer.value) {
-          messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight
+          messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight;
         }
-      })
-    }
+      });
+    };
 
     // Send a message
     const sendMessage = async () => {
-      if (!newMessage.value.trim() || isLoading.value) return
+      if (!newMessage.value.trim() || isLoading.value) return;
 
-      const userMessage = {
-        id: Date.now(),
-        role: 'user',
-        content: newMessage.value,
-        createdAt: new Date()
-      }
+      const messageToSend = newMessage.value;
+      newMessage.value = '';
 
-      // Add user message to chat
-      messages.value.push(userMessage)
-      scrollToBottom()
-
-      // Clear input
-      const messageToSend = newMessage.value
-      newMessage.value = ''
-
-      // Show loading indicator
-      isLoading.value = true
-      scrollToBottom()
+      scrollToBottom();
 
       try {
-        const aiMessage = await chatService.sendMessage(props.userId, messageToSend)
-
-        // Add AI response to messages
-        messages.value.push({
-          ...aiMessage,
-          createdAt: new Date(aiMessage.createdAt)
-        })
+        await chatStore.sendMessage(props.userId, messageToSend);
+        scrollToBottom();
       } catch (error) {
-        console.error('Error sending message:', error)
-
-        // Show error message
-        const errorMessage = {
-          id: Date.now() + 1,
-          role: 'assistant',
-          content: 'Sorry, I encountered an error processing your request. Please try again.',
-          createdAt: new Date()
-        }
-
-        messages.value.push(errorMessage)
-      } finally {
-        isLoading.value = false
-        scrollToBottom()
+        uiStore.showError('Failed to send message');
+        scrollToBottom();
       }
-    }
+    };
 
     // Clear chat history
     const clearHistory = async () => {
       if (confirm('Are you sure you want to clear the chat history?')) {
         try {
-          await chatService.clearHistory(props.userId)
-          // Reload messages to show welcome message
-          await loadMessages()
+          await chatStore.clearHistory(props.userId);
+          uiStore.showSuccess('Chat history cleared');
         } catch (error) {
-          console.error('Error clearing history:', error)
+          uiStore.showError('Failed to clear chat history');
         }
       }
-    }
+    };
 
     // Load messages when component mounts
     onMounted(() => {
-      loadMessages()
-    })
+      loadMessages();
+    });
 
     return {
       messages,
@@ -176,10 +128,10 @@ export default {
       messagesContainer,
       formatTimestamp,
       sendMessage,
-      clearHistory
-    }
-  }
-}
+      clearHistory,
+    };
+  },
+};
 </script>
 
 <style scoped>
@@ -301,7 +253,9 @@ export default {
 }
 
 @keyframes typing {
-  0%, 60%, 100% {
+  0%,
+  60%,
+  100% {
     transform: translateY(0);
   }
   30% {

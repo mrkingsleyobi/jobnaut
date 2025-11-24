@@ -46,12 +46,11 @@ class SecurityLogger {
 
     // If we're not in production, also log to console
     if (process.env.NODE_ENV !== 'production') {
-      this.logger.add(new winston.transports.Console({
-        format: winston.format.combine(
-          winston.format.colorize(),
-          winston.format.simple()
-        )
-      }));
+      this.logger.add(
+        new winston.transports.Console({
+          format: winston.format.combine(winston.format.colorize(), winston.format.simple()),
+        })
+      );
     }
   }
 
@@ -65,7 +64,7 @@ class SecurityLogger {
       event: 'auth',
       type: eventType,
       ...data,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
 
     switch (eventType) {
@@ -99,7 +98,7 @@ class SecurityLogger {
       event: 'suspicious_activity',
       type: activityType,
       ...data,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
 
     this.logger.warn('Suspicious activity detected', logData);
@@ -117,7 +116,7 @@ class SecurityLogger {
       resource,
       action,
       ...data,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
 
     if (data.allowed === false) {
@@ -137,7 +136,7 @@ class SecurityLogger {
       event: 'data_access',
       dataType,
       ...data,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
 
     this.logger.info('Sensitive data accessed', logData);
@@ -153,7 +152,7 @@ class SecurityLogger {
       event: 'security_incident',
       type: incidentType,
       ...data,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
 
     this.logger.error('Security incident detected', logData);
@@ -169,7 +168,7 @@ class SecurityLogger {
       event: 'crypto_operation',
       operation,
       ...data,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
 
     this.logger.info('Cryptographic operation performed', logData);

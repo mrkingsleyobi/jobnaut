@@ -25,10 +25,10 @@ describe('Jobs Router', () => {
             description: 'Exciting opportunity',
             skills: ['JavaScript', 'React'],
             postedDate: new Date().toISOString(),
-            applicationLink: 'https://example.com/apply/1'
-          }
+            applicationLink: 'https://example.com/apply/1',
+          },
         ],
-        totalCount: 1
+        totalCount: 1,
       };
 
       // Mock the procedure call
@@ -36,7 +36,7 @@ describe('Jobs Router', () => {
       const mockInput = {
         query: 'software',
         limit: 10,
-        offset: 0
+        offset: 0,
       };
 
       // Since we're testing the router structure and not the actual tRPC execution,
@@ -59,8 +59,8 @@ describe('Jobs Router', () => {
           skills: ['JavaScript', 'React', 'Node.js', 'Python'],
           postedDate: new Date().toISOString(),
           applicationLink: 'https://example.com/apply/1',
-          matchScore: 0.95
-        }
+          matchScore: 0.95,
+        },
       ];
 
       // Mock the procedure call
@@ -85,7 +85,7 @@ describe('Jobs Router', () => {
         description: 'Exciting opportunity',
         skills: ['JavaScript', 'React'],
         postedDate: new Date().toISOString(),
-        applicationLink: 'https://example.com/apply/1'
+        applicationLink: 'https://example.com/apply/1',
       };
 
       // Mock the procedure call

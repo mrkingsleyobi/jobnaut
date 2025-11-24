@@ -9,22 +9,26 @@
 ## 2. Technology Stack
 
 ### Frontend
+
 - **Framework:** Nuxt 3 (Vue.js)
 - **Search:** agentic-search library with Meilisearch
 - **Deployment:** Vercel/Netlify
 
 ### Backend
+
 - **API Layer:** tRPC + Node.js
 - **Database:** PostgreSQL with Prisma ORM
 - **Search Index:** Meilisearch
 - **MCP Server:** qudag-mcp crate for context management
 
 ### AI Service
+
 - **Framework:** Python FastAPI
 - **ML Libraries:** Transformers (Hugging Face), LangChain
 - **Models:** BERT for NER, BlenderBot for chat, text classification models
 
 ### Infrastructure
+
 - **Containerization:** Docker
 - **Deployment:** Render/Kubernetes
 - **Monitoring:** Winston/Bunyan for logs
@@ -32,9 +36,11 @@
 ## 3. Core Components Implementation
 
 ### 3.1 User Authentication & Profiles
+
 **Technologies:** Clerk/Auth.js, PostgreSQL, Prisma
 
 **Implementation Steps:**
+
 1. Set up Clerk authentication with email/social providers
 2. Create user model with fields: name, email, location, experience level, skills
 3. Implement resume upload/storage (encrypted)
@@ -44,9 +50,11 @@
 **Timeline:** Weeks 1-2
 
 ### 3.2 Job Data Pipeline
+
 **Technologies:** JSearch API, Python NLP service, PostgreSQL, Meilisearch
 
 **Implementation Steps:**
+
 1. Integrate JSearch API for job data fetching
 2. Implement job data model with fields: title, company, location, description, skills
 3. Create Python service for NLP processing:
@@ -59,9 +67,11 @@
 **Timeline:** Weeks 3-4
 
 ### 3.3 Search & Recommendations
+
 **Technologies:** agentic-search, Meilisearch, PostgreSQL, Nuxt
 
 **Implementation Steps:**
+
 1. Integrate agentic-search library in frontend
 2. Connect to Meilisearch API for real-time search
 3. Implement search filters (location, remote, experience level)
@@ -75,9 +85,11 @@
 **Timeline:** Weeks 5-6
 
 ### 3.4 AI Career Coach (Chatbot)
+
 **Technologies:** Hugging Face models, LangChain, FastAPI, tRPC
 
 **Implementation Steps:**
+
 1. Set up Hugging Face model service (BlenderBot for chat)
 2. Implement LangChain for conversation management
 3. Create knowledge integration:
@@ -91,9 +103,11 @@
 **Timeline:** Weeks 7-8
 
 ### 3.5 Skill Insights & Analytics
+
 **Technologies:** Python NLP, PostgreSQL, Nuxt, Chart.js
 
 **Implementation Steps:**
+
 1. Implement skill demand analysis:
    - Process job data to extract skill frequencies
    - Create charts showing top skills by category/region
@@ -110,6 +124,7 @@
 ## 4. Infrastructure & DevOps
 
 ### 4.1 Database Schema
+
 ```sql
 -- Users table
 CREATE TABLE users (
@@ -148,13 +163,16 @@ CREATE TABLE saved_jobs (
 ```
 
 ### 4.2 API Endpoints
+
 **tRPC Endpoints:**
+
 - `user.getProfile`, `user.updateProfile`
 - `jobs.search`, `jobs.getRecommended`, `jobs.getById`
 - `savedJobs.list`, `savedJobs.add`, `savedJobs.updateStatus`
 - `analytics.getSkillTrends`, `analytics.getSalaryData`
 
 ### 4.3 Security Implementation
+
 1. JWT token authentication for all endpoints
 2. Input sanitization to prevent XSS/SQL injection
 3. Rate limiting on API endpoints
@@ -164,17 +182,20 @@ CREATE TABLE saved_jobs (
 ## 5. Performance Optimization
 
 ### 5.1 Caching Strategy
+
 - Cache frequent queries (top skills, salary trends)
 - Use Redis for session storage
 - Implement browser caching for static assets
 - CDN for images and large files
 
 ### 5.2 Database Optimization
+
 - Index on job.title, job.skills, user.id
 - Query optimization for search operations
 - Connection pooling for PostgreSQL
 
 ### 5.3 AI Service Optimization
+
 - Model loading optimization
 - GPU acceleration for inference
 - Response streaming for chatbot
@@ -182,16 +203,19 @@ CREATE TABLE saved_jobs (
 ## 6. Testing Strategy
 
 ### 6.1 Unit Testing
+
 - Backend API endpoints (Jest)
 - Database operations (Prisma testing)
 - AI service functions (Pytest)
 
 ### 6.2 Integration Testing
+
 - End-to-end user flows
 - Search functionality
 - Chatbot responses
 
 ### 6.3 Performance Testing
+
 - Load testing with k6/Artillery
 - Response time monitoring
 - Concurrent user simulation
@@ -199,11 +223,13 @@ CREATE TABLE saved_jobs (
 ## 7. Deployment Plan
 
 ### 7.1 Staging Environment
+
 - Mirror production setup
 - Automated deployment via CI/CD
 - Testing with beta users
 
 ### 7.2 Production Deployment
+
 - Vercel for frontend
 - Render/Kubernetes for backend services
 - Monitoring and alerting setup
@@ -212,31 +238,37 @@ CREATE TABLE saved_jobs (
 ## 8. Timeline & Milestones
 
 ### Phase 1: Foundation (Weeks 1-2)
+
 - Repository setup and development environment
 - User authentication and profile management
 - Database schema implementation
 
 ### Phase 2: Data Pipeline (Weeks 3-4)
+
 - Job data integration and NLP processing
 - Search index configuration
 - Basic job listing functionality
 
 ### Phase 3: Frontend Development (Weeks 5-6)
+
 - Nuxt 3 frontend implementation
 - Search UI and job listing components
 - Job details page
 
 ### Phase 4: AI Features (Weeks 7-8)
+
 - Chatbot implementation
 - Recommendation algorithms
 - Skill gap analysis
 
 ### Phase 5: Polish & Testing (Weeks 9-10)
+
 - UI refinement and mobile responsiveness
 - Comprehensive testing
 - Performance optimization
 
 ### Phase 6: Launch (Weeks 11-12)
+
 - Production deployment
 - Final testing and monitoring setup
 - Public launch
@@ -244,6 +276,7 @@ CREATE TABLE saved_jobs (
 ## 9. Risk Assessment
 
 ### Technical Risks
+
 1. **AI Model Performance:** Poor chatbot accuracy may require fine-tuning
    - Mitigation: Extensive testing and feedback loop
 
@@ -254,6 +287,7 @@ CREATE TABLE saved_jobs (
    - Mitigation: Load testing and horizontal scaling
 
 ### Timeline Risks
+
 1. **Complex AI Integration:** May take longer than estimated
    - Mitigation: Prioritize core features, defer advanced features
 
@@ -263,12 +297,14 @@ CREATE TABLE saved_jobs (
 ## 10. Success Metrics
 
 ### Technical Metrics
+
 - Page load times < 2 seconds
 - API response times < 500ms
 - Chatbot response times < 3 seconds
 - System uptime > 99.5%
 
 ### User Metrics
+
 - User retention rate
 - Job application completion rate
 - Chatbot usage frequency

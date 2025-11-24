@@ -1,29 +1,29 @@
 // Search service for JobNaut frontend
 // Handles Meilisearch API integration for real-time job search
 
-import { MeiliSearch } from 'meilisearch'
+import { MeiliSearch } from 'meilisearch';
 
 class SearchService {
   constructor() {
     // Get configuration from runtime config
     // In test environment, use default values
-    let host = 'http://localhost:7700'
-    let apiKey = ''
+    let host = 'http://localhost:7700';
+    let apiKey = '';
 
     if (typeof useRuntimeConfig !== 'undefined') {
-      const config = useRuntimeConfig()
-      host = config.public.meilisearchHost || 'http://localhost:7700'
-      apiKey = config.public.meilisearchKey || ''
+      const config = useRuntimeConfig();
+      host = config.public.meilisearchHost || 'http://localhost:7700';
+      apiKey = config.public.meilisearchKey || '';
     }
 
     // Initialize Meilisearch client
     this.client = new MeiliSearch({
       host: host,
-      apiKey: apiKey
-    })
+      apiKey: apiKey,
+    });
 
     // Job index
-    this.jobIndex = this.client.index('jobs')
+    this.jobIndex = this.client.index('jobs');
   }
 
   /**
@@ -40,22 +40,22 @@ class SearchService {
   async searchJobs(params = {}) {
     try {
       // Build search filters
-      const filters = []
+      const filters = [];
 
       if (params.location) {
         if (params.location === 'remote') {
-          filters.push('location = "Remote"')
+          filters.push('location = "Remote"');
         } else {
-          filters.push(`location = "${params.location}"`)
+          filters.push(`location = "${params.location}"`);
         }
       }
 
       if (params.experience) {
-        filters.push(`experienceLevel = "${params.experience}"`)
+        filters.push(`experienceLevel = "${params.experience}"`);
       }
 
       if (params.jobType) {
-        filters.push(`jobType = "${params.jobType}"`)
+        filters.push(`jobType = "${params.jobType}"`);
       }
 
       // Perform search
@@ -63,19 +63,19 @@ class SearchService {
         filter: filters.length > 0 ? filters.join(' AND ') : undefined,
         limit: params.limit || 20,
         offset: params.page ? (params.page - 1) * (params.limit || 20) : 0,
-        sort: ['postedDate:desc']
-      })
+        sort: ['postedDate:desc'],
+      });
 
       return {
         jobs: searchResult.hits,
         total: searchResult.estimatedTotalHits,
         page: params.page || 1,
         limit: params.limit || 20,
-        totalPages: Math.ceil(searchResult.estimatedTotalHits / (params.limit || 20))
-      }
+        totalPages: Math.ceil(searchResult.estimatedTotalHits / (params.limit || 20)),
+      };
     } catch (error) {
-      console.error('Error searching jobs:', error)
-      throw new Error(`Failed to search jobs: ${error.message}`)
+      console.error('Error searching jobs:', error);
+      throw new Error(`Failed to search jobs: ${error.message}`);
     }
   }
 
@@ -86,11 +86,11 @@ class SearchService {
    */
   async getJobById(id) {
     try {
-      const job = await this.jobIndex.getDocument(id)
-      return job
+      const job = await this.jobIndex.getDocument(id);
+      return job;
     } catch (error) {
-      console.error('Error getting job by ID:', error)
-      throw new Error(`Failed to get job: ${error.message}`)
+      console.error('Error getting job by ID:', error);
+      throw new Error(`Failed to get job: ${error.message}`);
     }
   }
 
@@ -103,18 +103,18 @@ class SearchService {
   async getRecommendations(userSkills = [], limit = 10) {
     try {
       // Build query from user skills
-      const query = userSkills.join(' OR ')
+      const query = userSkills.join(' OR ');
 
       // Search for jobs matching user skills
       const searchResult = await this.jobIndex.search(query, {
         limit: limit,
-        sort: ['matchScore:desc', 'postedDate:desc']
-      })
+        sort: ['matchScore:desc', 'postedDate:desc'],
+      });
 
-      return searchResult.hits
+      return searchResult.hits;
     } catch (error) {
-      console.error('Error getting recommendations:', error)
-      throw new Error(`Failed to get recommendations: ${error.message}`)
+      console.error('Error getting recommendations:', error);
+      throw new Error(`Failed to get recommendations: ${error.message}`);
     }
   }
 
@@ -125,11 +125,11 @@ class SearchService {
    */
   async indexJobs(jobs) {
     try {
-      const result = await this.jobIndex.addDocuments(jobs)
-      return result
+      const result = await this.jobIndex.addDocuments(jobs);
+      return result;
     } catch (error) {
-      console.error('Error indexing jobs:', error)
-      throw new Error(`Failed to index jobs: ${error.message}`)
+      console.error('Error indexing jobs:', error);
+      throw new Error(`Failed to index jobs: ${error.message}`);
     }
   }
 
@@ -140,11 +140,11 @@ class SearchService {
    */
   async updateJob(job) {
     try {
-      const result = await this.jobIndex.updateDocuments([job])
-      return result
+      const result = await this.jobIndex.updateDocuments([job]);
+      return result;
     } catch (error) {
-      console.error('Error updating job:', error)
-      throw new Error(`Failed to update job: ${error.message}`)
+      console.error('Error updating job:', error);
+      throw new Error(`Failed to update job: ${error.message}`);
     }
   }
 
@@ -155,14 +155,14 @@ class SearchService {
    */
   async deleteJob(jobId) {
     try {
-      const result = await this.jobIndex.deleteDocument(jobId)
-      return result
+      const result = await this.jobIndex.deleteDocument(jobId);
+      return result;
     } catch (error) {
-      console.error('Error deleting job:', error)
-      throw new Error(`Failed to delete job: ${error.message}`)
+      console.error('Error deleting job:', error);
+      throw new Error(`Failed to delete job: ${error.message}`);
     }
   }
 }
 
 // Export singleton instance
-export default new SearchService()
+export default new SearchService();

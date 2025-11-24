@@ -1,0 +1,301 @@
+# Alertmanager Configuration for JobNaut
+# Handles alert routing, grouping, and notifications with multiple channels
+
+global:
+  resolve_timeout: 5m
+
+  # SMTP configuration for email alerts
+  # Uncomment and configure for email notifications
+  # smtp_smarthost: 'smtp.gmail.com:587'
+  # smtp_from: 'alerts@jobnaut.com'
+  # smtp_auth_username: 'your-email@gmail.com'
+  # smtp_auth_password: 'your-app-password'
+  # smtp_require_tls: true
+
+  # Slack configuration (can be overridden per receiver)
+  # slack_api_url: 'https://hooks.slack.com/services/YOUR/WEBHOOK/URL'
+
+# The directory from which notification templates are read
+templates:
+  - '/etc/alertmanager/templates/*.tmpl'
+
+# The root route on which each incoming alert enters
+route:
+  # The labels by which incoming alerts are grouped together
+  # Alerts with the same group_by labels will be batched together
+  group_by: ['alertname', 'cluster', 'service', 'severity']
+
+  # When a new group of alerts is created, wait this long before sending
+  # the initial notification to allow for additional alerts to arrive
+  group_wait: 10s
+
+  # When the first notification was sent, wait this long to send a batch
+  # of new alerts that started firing for that group
+  group_interval: 10s
+
+  # If an alert has successfully been sent, wait this long before
+  # resending them (helps prevent alert fatigue)
+  repeat_interval: 3h
+
+  # A default receiver (catch-all)
+  receiver: 'team-notifications'
+
+  # Child routes with specific matching criteria
+  routes:
+    # Critical alerts - multiple notification channels
+    - match:
+        severity: critical
+      receiver: 'critical-alerts'
+      group_wait: 5s
+      group_interval: 5s
+      repeat_interval: 1h
+      continue: true # Continue to other routes
+
+    # Warning alerts
+    - match:
+        severity: warning
+      receiver: 'warning-alerts'
+      group_wait: 15s
+      repeat_interval: 6h
+
+    # Database-specific alerts
+    - match:
+        component: database
+      receiver: 'database-team'
+      group_by: ['alertname', 'operation']
+
+    # Infrastructure alerts
+    - match:
+        component: infrastructure
+      receiver: 'infrastructure-team'
+      group_by: ['alertname', 'instance']
+
+    # API/Application alerts
+    - match:
+        component: api
+      receiver: 'api-team'
+      group_by: ['alertname', 'route']
+
+    # Business metrics alerts
+    - match:
+        component: business
+      receiver: 'business-team'
+      repeat_interval: 12h
+
+    # AI service alerts
+    - match:
+        component: ai
+      receiver: 'ai-team'
+      group_by: ['alertname', 'provider']
+
+# Inhibition rules allow to mute a set of alerts given that another alert is firing
+# This prevents alert storms and reduces noise
+inhibit_rules:
+  # If a critical alert is firing, don't send warnings for the same alert
+  - source_match:
+      severity: 'critical'
+    target_match:
+      severity: 'warning'
+    equal: ['alertname', 'cluster', 'service']
+
+  # If service is down, inhibit all other alerts for that service
+  - source_match:
+      alertname: 'ServiceDown'
+    target_match_re:
+      alertname: '.*'
+    equal: ['service']
+
+  # If disk is critically full, inhibit disk warnings
+  - source_match:
+      alertname: 'CriticalDiskUsage'
+    target_match:
+      alertname: 'HighDiskUsage'
+    equal: ['instance']
+
+# Receivers configuration
+receivers:
+  # Default team notifications - webhook endpoint
+  - name: 'team-notifications'
+    webhook_configs:
+      - url: 'http://localhost:5001/alerts'
+        send_resolved: true
+        http_config:
+          bearer_token: 'your-webhook-token'
+
+  # Critical alerts - multiple notification channels (PagerDuty, Slack, Email)
+  - name: 'critical-alerts'
+    # PagerDuty integration for on-call rotation
+    pagerduty_configs:
+      - service_key: '${PAGERDUTY_SERVICE_KEY}'
+        severity: 'critical'
+        description: '{{ range .Alerts }}{{ .Annotations.summary }}{{ end }}'
+        details:
+          firing: '{{ .Alerts.Firing | len }}'
+          resolved: '{{ .Alerts.Resolved | len }}'
+          alertname: '{{ .GroupLabels.alertname }}'
+
+    # Slack critical channel
+    slack_configs:
+      - api_url: '${SLACK_WEBHOOK_URL}'
+        channel: '#alerts-critical'
+        username: 'JobNaut Alerts'
+        icon_emoji: ':rotating_light:'
+        color: 'danger'
+        title: ':rotating_light: CRITICAL: {{ .GroupLabels.alertname }}'
+        text: |
+          *Summary:* {{ range .Alerts }}{{ .Annotations.summary }}{{ end }}
+          *Description:* {{ range .Alerts }}{{ .Annotations.description }}{{ end }}
+          *Runbook:* {{ range .Alerts }}{{ .Annotations.runbook_url }}{{ end }}
+          *Severity:* {{ .GroupLabels.severity }}
+          *Component:* {{ .GroupLabels.component }}
+          *Status:* {{ if eq .Status "firing" }}:fire: FIRING{{ else }}:white_check_mark: RESOLVED{{ end }}
+        send_resolved: true
+        actions:
+          - type: button
+            text: 'View Runbook'
+            url: '{{ range .Alerts }}{{ .Annotations.runbook_url }}{{ end }}'
+          - type: button
+            text: 'View Grafana'
+            url: 'http://localhost:3002/d/jobnaut-application'
+
+    # Email for critical alerts
+    email_configs:
+      - to: '${ALERT_EMAIL_TO}'
+        from: '${ALERT_EMAIL_FROM}'
+        smarthost: '${SMTP_SMARTHOST}'
+        auth_username: '${SMTP_USERNAME}'
+        auth_password: '${SMTP_PASSWORD}'
+        require_tls: true
+        headers:
+          Subject: '[CRITICAL] JobNaut Alert: {{ .GroupLabels.alertname }}'
+        html: |
+          <h2>🚨 CRITICAL ALERT</h2>
+          <p><strong>Alert:</strong> {{ .GroupLabels.alertname }}</p>
+          <p><strong>Severity:</strong> {{ .GroupLabels.severity }}</p>
+          <p><strong>Component:</strong> {{ .GroupLabels.component }}</p>
+          {{ range .Alerts }}
+          <h3>{{ .Annotations.summary }}</h3>
+          <p>{{ .Annotations.description }}</p>
+          <p><a href="{{ .Annotations.runbook_url }}">View Runbook</a></p>
+          {{ end }}
+
+  # Warning alerts - Slack only
+  - name: 'warning-alerts'
+    slack_configs:
+      - api_url: '${SLACK_WEBHOOK_URL}'
+        channel: '#alerts-warning'
+        username: 'JobNaut Alerts'
+        icon_emoji: ':warning:'
+        color: 'warning'
+        title: ':warning: WARNING: {{ .GroupLabels.alertname }}'
+        text: |
+          *Summary:* {{ range .Alerts }}{{ .Annotations.summary }}{{ end }}
+          *Description:* {{ range .Alerts }}{{ .Annotations.description }}{{ end }}
+          *Component:* {{ .GroupLabels.component }}
+        send_resolved: true
+
+  # Database team alerts
+  - name: 'database-team'
+    slack_configs:
+      - api_url: '${SLACK_WEBHOOK_URL}'
+        channel: '#alerts-database'
+        username: 'JobNaut DB Monitor'
+        icon_emoji: ':floppy_disk:'
+        color: '{{ if eq .Status "firing" }}danger{{ else }}good{{ end }}'
+        title: '{{ if eq .Status "firing" }}:rotating_light:{{ else }}:white_check_mark:{{ end }} Database Alert: {{ .GroupLabels.alertname }}'
+        text: |
+          *Operation:* {{ .GroupLabels.operation }}
+          {{ range .Alerts }}
+          *Description:* {{ .Annotations.description }}
+          {{ end }}
+        send_resolved: true
+
+    email_configs:
+      - to: 'database-team@jobnaut.com'
+        headers:
+          Subject: '[DB] JobNaut Database Alert: {{ .GroupLabels.alertname }}'
+
+  # Infrastructure team alerts
+  - name: 'infrastructure-team'
+    slack_configs:
+      - api_url: '${SLACK_WEBHOOK_URL}'
+        channel: '#alerts-infrastructure'
+        username: 'JobNaut Infrastructure'
+        icon_emoji: ':gear:'
+        title: 'Infrastructure Alert: {{ .GroupLabels.alertname }}'
+        text: |
+          *Instance:* {{ .GroupLabels.instance }}
+          {{ range .Alerts }}
+          *Description:* {{ .Annotations.description }}
+          {{ end }}
+        send_resolved: true
+
+  # API team alerts
+  - name: 'api-team'
+    slack_configs:
+      - api_url: '${SLACK_WEBHOOK_URL}'
+        channel: '#alerts-api'
+        username: 'JobNaut API Monitor'
+        icon_emoji: ':satellite:'
+        title: 'API Alert: {{ .GroupLabels.alertname }}'
+        text: |
+          *Route:* {{ .GroupLabels.route }}
+          {{ range .Alerts }}
+          *Description:* {{ .Annotations.description }}
+          {{ end }}
+        send_resolved: true
+
+  # Business team alerts
+  - name: 'business-team'
+    slack_configs:
+      - api_url: '${SLACK_WEBHOOK_URL}'
+        channel: '#alerts-business'
+        username: 'JobNaut Business Metrics'
+        icon_emoji: ':chart_with_upwards_trend:'
+        title: 'Business Alert: {{ .GroupLabels.alertname }}'
+        text: |
+          {{ range .Alerts }}
+          *Description:* {{ .Annotations.description }}
+          {{ end }}
+        send_resolved: true
+
+  # AI service team alerts
+  - name: 'ai-team'
+    slack_configs:
+      - api_url: '${SLACK_WEBHOOK_URL}'
+        channel: '#alerts-ai'
+        username: 'JobNaut AI Monitor'
+        icon_emoji: ':robot_face:'
+        title: 'AI Service Alert: {{ .GroupLabels.alertname }}'
+        text: |
+          *Provider:* {{ .GroupLabels.provider }}
+          {{ range .Alerts }}
+          *Description:* {{ .Annotations.description }}
+          {{ end }}
+        send_resolved: true
+
+# Time intervals for muting alerts (optional)
+# Useful for planned maintenance windows
+time_intervals:
+  - name: 'business-hours'
+    time_intervals:
+      - weekdays: ['monday:friday']
+        times:
+          - start_time: '09:00'
+            end_time: '17:00'
+        location: 'America/New_York'
+
+  - name: 'after-hours'
+    time_intervals:
+      - weekdays: ['monday:friday']
+        times:
+          - start_time: '17:00'
+            end_time: '23:59'
+          - start_time: '00:00'
+            end_time: '09:00'
+      - weekdays: ['saturday', 'sunday']
+
+# Mute time intervals (optional)
+# Example: mute non-critical alerts during business hours
+# mute_time_intervals:
+#   - 'business-hours'

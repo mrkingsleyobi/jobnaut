@@ -1,30 +1,73 @@
 # JobNaut Frontend Dockerfile
+# Multi-stage build with Nginx for optimized production deployment
+#
+# SECURITY SCANNING:
+# Before deploying to production, scan this image for vulnerabilities:
+#   docker scan jobnaut/frontend:latest
+#   trivy image jobnaut/frontend:latest
 
-# Use Node.js LTS version compatible with Nuxt 4
-FROM node:20-alpine
+# ============================================
+# Stage 1: Dependencies
+# ============================================
+FROM node:20-alpine AS dependencies
 
-# Set working directory
 WORKDIR /app
 
 # Copy package files
 COPY package*.json ./
 
 # Install dependencies
-RUN npm ci --only=production
+RUN npm ci
 
-# Copy application code
+# ============================================
+# Stage 2: Builder
+# ============================================
+FROM node:20-alpine AS builder
+
+WORKDIR /app
+
+# Copy dependencies from previous stage
+COPY --from=dependencies /app/node_modules ./node_modules
+
+# Copy application source
 COPY . .
 
-# Build the frontend
+# Build the Nuxt application for production
+# This generates static files in .output/public
 RUN npm run build
 
-# Expose port
-EXPOSE 3000
+# ============================================
+# Stage 3: Production with Nginx
+# ============================================
+FROM nginx:1.27-alpine AS production
 
-# Create non-root user
-RUN addgroup -g 1001 -S nodejs
-RUN adduser -S nextjs -u 1001
-USER nextjs
+# Install curl for healthcheck
+RUN apk add --no-cache curl
 
-# Start the application
-CMD ["npm", "run", "start"]
+# Copy custom nginx configuration
+COPY --from=builder /app/nginx.conf /etc/nginx/nginx.conf
+
+# Copy built static files from builder stage
+COPY --from=builder /app/.output/public /usr/share/nginx/html
+
+# Create non-root user for nginx
+RUN addgroup -g 1001 -S nginx-app && \
+    adduser -S nginx-app -u 1001 -G nginx-app && \
+    chown -R nginx-app:nginx-app /usr/share/nginx/html && \
+    chown -R nginx-app:nginx-app /var/cache/nginx && \
+    chown -R nginx-app:nginx-app /var/log/nginx && \
+    touch /var/run/nginx.pid && \
+    chown -R nginx-app:nginx-app /var/run/nginx.pid
+
+# Switch to non-root user
+USER nginx-app
+
+# Expose port 80
+EXPOSE 80
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD curl -f http://localhost:80/ || exit 1
+
+# Start nginx
+CMD ["nginx", "-g", "daemon off;"]

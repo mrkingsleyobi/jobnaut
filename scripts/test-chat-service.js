@@ -16,7 +16,7 @@ class ChatService {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-        }
+        },
       });
 
       if (!response.ok) {
@@ -44,7 +44,7 @@ class ChatService {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ userId, message })
+        body: JSON.stringify({ userId, message }),
       });
 
       if (!response.ok) {
@@ -70,7 +70,7 @@ class ChatService {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
-        }
+        },
       });
 
       if (!response.ok) {

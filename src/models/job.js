@@ -1,11 +1,9 @@
 // Job model service for JobNaut
 // Handles all job-related database operations
 
-const prisma = process.env.NODE_ENV === 'test'
-  ? require('../db/testClient')
-  : require('../db/client');
-const NodeCache = require('node-cache');
-const cache = new NodeCache({ stdTTL: 300 }); // 5 minutes TTL
+const prisma =
+  process.env.NODE_ENV === 'test' ? require('../db/testClient') : require('../db/client');
+const cacheService = require('../services/cacheService');
 
 /**
  * Job model service
@@ -36,8 +34,8 @@ class JobService {
       },
     });
 
-    // Invalidate all cache to ensure search results are fresh
-    cache.flushAll();
+    // Invalidate all search cache to ensure search results are fresh
+    await cacheService.invalidate('search_*');
 
     return createdJob;
   }
@@ -49,7 +47,7 @@ class JobService {
    */
   async getJobById(id) {
     const cacheKey = `job_${id}`;
-    const cached = cache.get(cacheKey);
+    const cached = await cacheService.get(cacheKey);
 
     if (cached) {
       return cached;
@@ -60,7 +58,7 @@ class JobService {
     });
 
     if (job) {
-      cache.set(cacheKey, job);
+      await cacheService.set(cacheKey, job);
     }
 
     return job;
@@ -109,14 +107,15 @@ class JobService {
 
     // Create cache key for search results
     const cacheKey = `search_${query}_${page}_${limit}`;
-    const cached = cache.get(cacheKey);
+    const cached = await cacheService.get(cacheKey);
 
     if (cached) {
       return cached;
     }
 
     // SQLite doesn't support mode: 'insensitive', only use it with PostgreSQL
-    const isSQLite = process.env.NODE_ENV === 'test' ||
+    const isSQLite =
+      process.env.NODE_ENV === 'test' ||
       (process.env.DATABASE_URL && process.env.DATABASE_URL.startsWith('file:'));
 
     const searchConditions = {
@@ -151,7 +150,7 @@ class JobService {
     };
 
     // Cache the search results
-    cache.set(cacheKey, result);
+    await cacheService.set(cacheKey, result);
 
     return result;
   }
@@ -174,8 +173,8 @@ class JobService {
     });
 
     // Invalidate cache for this job and all search results
-    cache.del(`job_${id}`);
-    cache.flushAll(); // Clear all cache to ensure search results are fresh
+    await cacheService.del(`job_${id}`);
+    await cacheService.invalidate('search_*'); // Clear search cache to ensure results are fresh
 
     return updatedJob;
   }
@@ -191,8 +190,8 @@ class JobService {
     });
 
     // Invalidate cache for this job and all search results
-    cache.del(`job_${id}`);
-    cache.flushAll(); // Clear all cache to ensure search results are fresh
+    await cacheService.del(`job_${id}`);
+    await cacheService.invalidate('search_*'); // Clear search cache to ensure results are fresh
 
     return deletedJob;
   }
@@ -208,7 +207,7 @@ class JobService {
     const skip = (page - 1) * limit;
 
     // Create OR conditions for each skill
-    const skillConditions = skills.map(skill => ({
+    const skillConditions = skills.map((skill) => ({
       skills: {
         path: '$[*]',
         string_contains: skill,

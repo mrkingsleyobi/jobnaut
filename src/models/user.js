@@ -1,12 +1,50 @@
 // User model service for JobNaut
 // Handles all user-related database operations
 
-const prisma = process.env.NODE_ENV === 'test'
-  ? require('../db/testClient')
-  : require('../db/client');
+const prisma =
+  process.env.NODE_ENV === 'test' ? require('../db/testClient') : require('../db/client');
 const encryptionService = require('../services/encryption');
-const NodeCache = require('node-cache');
-const userCache = new NodeCache({ stdTTL: 300 }); // 5 minutes TTL
+const cacheService = require('../services/cacheService');
+
+/**
+ * Decrypt user fields
+ * @param {Object|null} user - User object to decrypt
+ * @returns {Object|null} User with decrypted fields
+ */
+function decryptUserFields(user) {
+  if (!user) {
+    return user;
+  }
+
+  const decryptedUser = {
+    ...user,
+    name:
+      user.name && typeof user.name === 'object' ? encryptionService.decrypt(user.name) : user.name,
+    location:
+      user.location && typeof user.location === 'object'
+        ? encryptionService.decrypt(user.location)
+        : user.location,
+    experienceLevel:
+      user.experienceLevel && typeof user.experienceLevel === 'object'
+        ? encryptionService.decrypt(user.experienceLevel)
+        : user.experienceLevel,
+    skills:
+      user.skills && typeof user.skills === 'object'
+        ? encryptionService.decrypt(user.skills)
+        : user.skills,
+  };
+
+  // Parse skills JSON if it exists and is a string
+  if (decryptedUser.skills && typeof decryptedUser.skills === 'string') {
+    try {
+      decryptedUser.skills = JSON.parse(decryptedUser.skills);
+    } catch (error) {
+      console.warn('Failed to parse user skills:', error);
+    }
+  }
+
+  return decryptedUser;
+}
 
 /**
  * User model service
@@ -29,7 +67,7 @@ class UserService {
       name: userData.name,
       location: userData.location,
       experienceLevel: userData.experienceLevel,
-      skills: userData.skills
+      skills: userData.skills,
     });
 
     return await prisma.user.create({
@@ -51,7 +89,7 @@ class UserService {
    */
   async getUserById(id) {
     const cacheKey = `user_${id}`;
-    const cached = userCache.get(cacheKey);
+    const cached = await cacheService.get(cacheKey);
 
     if (cached) {
       return cached;
@@ -62,38 +100,14 @@ class UserService {
     });
 
     // Decrypt sensitive data when retrieving
-    if (user) {
-      const decryptedUser = {
-        ...user,
-        name: user.name && typeof user.name === 'object'
-          ? encryptionService.decrypt(user.name)
-          : user.name,
-        location: user.location && typeof user.location === 'object'
-          ? encryptionService.decrypt(user.location)
-          : user.location,
-        experienceLevel: user.experienceLevel && typeof user.experienceLevel === 'object'
-          ? encryptionService.decrypt(user.experienceLevel)
-          : user.experienceLevel,
-        skills: user.skills && typeof user.skills === 'object'
-          ? encryptionService.decrypt(user.skills)
-          : user.skills
-      };
+    const decryptedUser = decryptUserFields(user);
 
-      // Parse skills JSON if it exists and is a string
-      if (decryptedUser.skills && typeof decryptedUser.skills === 'string') {
-        try {
-          decryptedUser.skills = JSON.parse(decryptedUser.skills);
-        } catch (error) {
-          console.warn('Failed to parse user skills:', error);
-        }
-      }
-
+    if (decryptedUser) {
       // Cache the decrypted user data
-      userCache.set(cacheKey, decryptedUser);
-      return decryptedUser;
+      await cacheService.set(cacheKey, decryptedUser);
     }
 
-    return user;
+    return decryptedUser;
   }
 
   /**
@@ -103,7 +117,7 @@ class UserService {
    */
   async getUserByClerkId(clerkId) {
     const cacheKey = `user_clerk_${clerkId}`;
-    const cached = userCache.get(cacheKey);
+    const cached = await cacheService.get(cacheKey);
 
     if (cached) {
       return cached;
@@ -114,38 +128,14 @@ class UserService {
     });
 
     // Decrypt sensitive data when retrieving
-    if (user) {
-      const decryptedUser = {
-        ...user,
-        name: user.name && typeof user.name === 'object'
-          ? encryptionService.decrypt(user.name)
-          : user.name,
-        location: user.location && typeof user.location === 'object'
-          ? encryptionService.decrypt(user.location)
-          : user.location,
-        experienceLevel: user.experienceLevel && typeof user.experienceLevel === 'object'
-          ? encryptionService.decrypt(user.experienceLevel)
-          : user.experienceLevel,
-        skills: user.skills && typeof user.skills === 'object'
-          ? encryptionService.decrypt(user.skills)
-          : user.skills
-      };
+    const decryptedUser = decryptUserFields(user);
 
-      // Parse skills JSON if it exists and is a string
-      if (decryptedUser.skills && typeof decryptedUser.skills === 'string') {
-        try {
-          decryptedUser.skills = JSON.parse(decryptedUser.skills);
-        } catch (error) {
-          console.warn('Failed to parse user skills:', error);
-        }
-      }
-
+    if (decryptedUser) {
       // Cache the decrypted user data
-      userCache.set(cacheKey, decryptedUser);
-      return decryptedUser;
+      await cacheService.set(cacheKey, decryptedUser);
     }
 
-    return user;
+    return decryptedUser;
   }
 
   /**
@@ -155,7 +145,7 @@ class UserService {
    */
   async getUserByEmail(email) {
     const cacheKey = `user_email_${email}`;
-    const cached = userCache.get(cacheKey);
+    const cached = await cacheService.get(cacheKey);
 
     if (cached) {
       return cached;
@@ -166,38 +156,14 @@ class UserService {
     });
 
     // Decrypt sensitive data when retrieving
-    if (user) {
-      const decryptedUser = {
-        ...user,
-        name: user.name && typeof user.name === 'object'
-          ? encryptionService.decrypt(user.name)
-          : user.name,
-        location: user.location && typeof user.location === 'object'
-          ? encryptionService.decrypt(user.location)
-          : user.location,
-        experienceLevel: user.experienceLevel && typeof user.experienceLevel === 'object'
-          ? encryptionService.decrypt(user.experienceLevel)
-          : user.experienceLevel,
-        skills: user.skills && typeof user.skills === 'object'
-          ? encryptionService.decrypt(user.skills)
-          : user.skills
-      };
+    const decryptedUser = decryptUserFields(user);
 
-      // Parse skills JSON if it exists and is a string
-      if (decryptedUser.skills && typeof decryptedUser.skills === 'string') {
-        try {
-          decryptedUser.skills = JSON.parse(decryptedUser.skills);
-        } catch (error) {
-          console.warn('Failed to parse user skills:', error);
-        }
-      }
-
+    if (decryptedUser) {
       // Cache the decrypted user data
-      userCache.set(cacheKey, decryptedUser);
-      return decryptedUser;
+      await cacheService.set(cacheKey, decryptedUser);
     }
 
-    return user;
+    return decryptedUser;
   }
 
   /**
@@ -212,7 +178,7 @@ class UserService {
       name: updateData.name,
       location: updateData.location,
       experienceLevel: updateData.experienceLevel,
-      skills: updateData.skills
+      skills: updateData.skills,
     });
 
     // Only include fields that were provided in the update
@@ -236,35 +202,14 @@ class UserService {
     });
 
     // Decrypt sensitive data for return value
-    const decryptedUser = {
-      ...updatedUser,
-      name: updatedUser.name && typeof updatedUser.name === 'object'
-        ? encryptionService.decrypt(updatedUser.name)
-        : updatedUser.name,
-      location: updatedUser.location && typeof updatedUser.location === 'object'
-        ? encryptionService.decrypt(updatedUser.location)
-        : updatedUser.location,
-      experienceLevel: updatedUser.experienceLevel && typeof updatedUser.experienceLevel === 'object'
-        ? encryptionService.decrypt(updatedUser.experienceLevel)
-        : updatedUser.experienceLevel,
-      skills: updatedUser.skills && typeof updatedUser.skills === 'object'
-        ? encryptionService.decrypt(updatedUser.skills)
-        : updatedUser.skills
-    };
-
-    // Parse skills JSON if it exists and is a string
-    if (decryptedUser.skills && typeof decryptedUser.skills === 'string') {
-      try {
-        decryptedUser.skills = JSON.parse(decryptedUser.skills);
-      } catch (error) {
-        console.warn('Failed to parse user skills:', error);
-      }
-    }
+    const decryptedUser = decryptUserFields(updatedUser);
 
     // Invalidate cache for this user
-    userCache.del(`user_${id}`);
-    userCache.del(`user_clerk_${updatedUser.clerkId}`);
-    userCache.del(`user_email_${updatedUser.email}`);
+    await cacheService.delMultiple([
+      `user_${id}`,
+      `user_clerk_${updatedUser.clerkId}`,
+      `user_email_${updatedUser.email}`,
+    ]);
 
     return decryptedUser;
   }
@@ -286,9 +231,11 @@ class UserService {
 
     // Invalidate cache for this user
     if (user) {
-      userCache.del(`user_${id}`);
-      userCache.del(`user_clerk_${user.clerkId}`);
-      userCache.del(`user_email_${user.email}`);
+      await cacheService.delMultiple([
+        `user_${id}`,
+        `user_clerk_${user.clerkId}`,
+        `user_email_${user.email}`,
+      ]);
     }
 
     return deletedUser;

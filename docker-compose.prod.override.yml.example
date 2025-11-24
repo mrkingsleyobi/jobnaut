@@ -1,0 +1,96 @@
+# Docker Compose Production Override Example
+#
+# This file demonstrates how to properly use Docker secrets in production.
+#
+# SETUP INSTRUCTIONS:
+# 1. Create a secrets directory: mkdir -p secrets
+# 2. Create secret files with proper permissions:
+#    echo "your_db_user" > secrets/db_user.txt
+#    echo "your_db_password" > secrets/db_password.txt
+#    echo "your_db_name" > secrets/db_name.txt
+#    echo "your_clerk_secret_key" > secrets/clerk_secret_key.txt
+#    echo "your_encryption_key" > secrets/encryption_key.txt
+#    echo "your_meili_master_key" > secrets/meili_master_key.txt
+#
+# 3. Set proper permissions (secrets should be read-only):
+#    chmod 600 secrets/*.txt
+#
+# 4. Add secrets directory to .gitignore:
+#    echo "secrets/" >> .gitignore
+#
+# 5. Deploy with: docker-compose -f docker-compose.prod.yml up -d
+#
+# DOCKER SWARM (Alternative):
+# If using Docker Swarm, you can use external secrets:
+#
+# secrets:
+#   db_password:
+#     external: true
+#   clerk_secret_key:
+#     external: true
+#   encryption_key:
+#     external: true
+#   meili_master_key:
+#     external: true
+#
+# Then create secrets with:
+#   echo "my_password" | docker secret create db_password -
+#   echo "my_clerk_key" | docker secret create clerk_secret_key -
+#   echo "my_encryption_key" | docker secret create encryption_key -
+#   echo "my_meili_key" | docker secret create meili_master_key -
+#
+# SECURITY BEST PRACTICES:
+# - Never commit secrets to version control
+# - Use strong, randomly generated passwords
+# - Rotate secrets regularly
+# - Use different secrets for each environment
+# - Consider using a secrets management service (AWS Secrets Manager, HashiCorp Vault, etc.)
+# - Enable Docker Content Trust: export DOCKER_CONTENT_TRUST=1
+# - Regularly scan images: docker scan jobnaut/backend:latest
+
+version: '3.8'
+
+# Override example for additional security configurations
+services:
+  database:
+    # Enable read-only root filesystem (requires writable volumes for data)
+    read_only: true
+    tmpfs:
+      - /tmp
+      - /run
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - SETGID
+      - SETUID
+
+  backend:
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_BIND_SERVICE
+
+  frontend:
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_BIND_SERVICE
+    read_only: true
+    tmpfs:
+      - /tmp
+      - /var/cache/nginx
+
+  meilisearch:
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_BIND_SERVICE

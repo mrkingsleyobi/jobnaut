@@ -14,7 +14,7 @@ const createTRPCExpressMiddleware = () => {
     createContext,
     onError: ({ error, path, input, ctx, type }) => {
       console.error(`tRPC Error on path ${path}:`, error);
-    }
+    },
   });
 };
 

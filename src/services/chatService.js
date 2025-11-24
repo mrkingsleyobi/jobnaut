@@ -8,13 +8,11 @@ const { createAnthropic } = require('@ai-sdk/anthropic');
 
 // Configuration
 const aiConfig = require('../config/aiConfig');
+const logger = require('../utils/logger');
+const cacheService = require('./cacheService');
 
 class ChatService {
   constructor() {
-    // In a real implementation, you would initialize database connections or external APIs here
-    // For now, we'll use in-memory storage for demonstration
-    this.conversations = new Map(); // userId -> array of messages
-
     // Initialize AI providers
     this.initializeAIProviders();
   }
@@ -28,18 +26,18 @@ class ChatService {
       if (aiConfig.openai.apiKey) {
         this.openai = createOpenAI({
           apiKey: aiConfig.openai.apiKey,
-          baseURL: aiConfig.openai.baseUrl
+          baseURL: aiConfig.openai.baseUrl,
         });
       }
 
       // Initialize Anthropic provider if API key is provided
       if (aiConfig.anthropic.apiKey) {
         this.anthropic = createAnthropic({
-          apiKey: aiConfig.anthropic.apiKey
+          apiKey: aiConfig.anthropic.apiKey,
         });
       }
     } catch (error) {
-      console.error('Error initializing AI providers:', error);
+      logger.error('Error initializing AI providers', { error: error.message, stack: error.stack });
     }
   }
 
@@ -50,11 +48,11 @@ class ChatService {
    */
   async getConversationHistory(userId) {
     try {
-      // In a real implementation, this would fetch from a database
-      const history = this.conversations.get(userId) || [];
-      return history;
+      const cacheKey = `conversation_${userId}`;
+      const history = await cacheService.get(cacheKey);
+      return history || [];
     } catch (error) {
-      console.error('Error fetching conversation history:', error);
+      logger.error('Error fetching conversation history', { error: error.message, stack: error.stack, userId });
       throw new Error('Failed to fetch conversation history');
     }
   }
@@ -67,19 +65,16 @@ class ChatService {
    */
   async sendMessage(userId, message) {
     try {
-      // Initialize conversation history if it doesn't exist
-      if (!this.conversations.has(userId)) {
-        this.conversations.set(userId, []);
-      }
-
-      const conversation = this.conversations.get(userId);
+      // Get conversation history from Redis cache
+      const cacheKey = `conversation_${userId}`;
+      let conversation = await cacheService.get(cacheKey) || [];
 
       // Add user message to history
       const userMessage = {
         id: this.generateMessageId(),
         role: 'user',
         content: message,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
 
       conversation.push(userMessage);
@@ -91,15 +86,18 @@ class ChatService {
         id: this.generateMessageId(),
         role: 'assistant',
         content: aiResponse,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
 
       // Add AI response to history
       conversation.push(aiMessage);
 
+      // Store conversation in Redis cache with 1 hour TTL
+      await cacheService.set(cacheKey, conversation, 3600);
+
       return aiMessage;
     } catch (error) {
-      console.error('Error sending message:', error);
+      logger.error('Error sending message', { error: error.message, stack: error.stack, userId });
       throw new Error('Failed to send message');
     }
   }
@@ -111,11 +109,11 @@ class ChatService {
    */
   async clearHistory(userId) {
     try {
-      // In a real implementation, this would delete from a database
-      this.conversations.delete(userId);
+      const cacheKey = `conversation_${userId}`;
+      await cacheService.del(cacheKey);
       return { success: true, message: 'Conversation history cleared' };
     } catch (error) {
-      console.error('Error clearing conversation history:', error);
+      logger.error('Error clearing conversation history', { error: error.message, stack: error.stack, userId });
       throw new Error('Failed to clear conversation history');
     }
   }
@@ -133,7 +131,7 @@ class ChatService {
         return response;
       }
     } catch (error) {
-      console.warn('AI service error, falling back to mock response:', error.message);
+      logger.warn('AI service error, falling back to mock response', { error: error.message });
     }
 
     // Fallback to mock response
@@ -152,9 +150,9 @@ class ChatService {
     }
 
     // Format conversation for AI providers
-    const formattedMessages = conversation.map(msg => ({
+    const formattedMessages = conversation.map((msg) => ({
       role: msg.role,
-      content: msg.content
+      content: msg.content,
     }));
 
     // Try each provider in order of preference
@@ -162,17 +160,33 @@ class ChatService {
 
     // Add preferred provider first
     if (aiConfig.defaultProvider === 'openai' && this.openai) {
-      providers.push({ name: 'openai', provider: this.openai, model: aiConfig.openai.defaultModel });
+      providers.push({
+        name: 'openai',
+        provider: this.openai,
+        model: aiConfig.openai.defaultModel,
+      });
     } else if (aiConfig.defaultProvider === 'anthropic' && this.anthropic) {
-      providers.push({ name: 'anthropic', provider: this.anthropic, model: aiConfig.anthropic.defaultModel });
+      providers.push({
+        name: 'anthropic',
+        provider: this.anthropic,
+        model: aiConfig.anthropic.defaultModel,
+      });
     }
 
     // Add other available providers
     if (aiConfig.defaultProvider !== 'openai' && this.openai) {
-      providers.push({ name: 'openai', provider: this.openai, model: aiConfig.openai.defaultModel });
+      providers.push({
+        name: 'openai',
+        provider: this.openai,
+        model: aiConfig.openai.defaultModel,
+      });
     }
     if (aiConfig.defaultProvider !== 'anthropic' && this.anthropic) {
-      providers.push({ name: 'anthropic', provider: this.anthropic, model: aiConfig.anthropic.defaultModel });
+      providers.push({
+        name: 'anthropic',
+        provider: this.anthropic,
+        model: aiConfig.anthropic.defaultModel,
+      });
     }
 
     // Try each provider with retry logic
@@ -183,7 +197,7 @@ class ChatService {
           return response;
         }
       } catch (error) {
-        console.warn(`Failed to get response from ${name}:`, error.message);
+        logger.warn('Failed to get response from AI provider', { provider: name, error: error.message });
         // Continue to next provider
       }
     }
@@ -211,7 +225,7 @@ class ChatService {
         // Get response from AI
         const { text } = await streamText({
           model: aiModel,
-          messages: messages
+          messages: messages,
         });
 
         // Get the full response text
@@ -223,13 +237,14 @@ class ChatService {
         return responseText;
       } catch (error) {
         lastError = error;
-        console.warn(`Attempt ${attempt} failed for ${providerName}:`, error.message);
+        logger.warn('AI provider attempt failed', { attempt, provider: providerName, error: error.message });
 
         // Don't wait after the last attempt
         if (attempt < maxAttempts) {
-          const delay = aiConfig.retry.delay * Math.pow(aiConfig.retry.backoffMultiplier, attempt - 1);
-          console.log(`Retrying in ${delay}ms...`);
-          await new Promise(resolve => setTimeout(resolve, delay));
+          const delay =
+            aiConfig.retry.delay * Math.pow(aiConfig.retry.backoffMultiplier, attempt - 1);
+          logger.debug('Retrying AI provider call', { delay, provider: providerName });
+          await new Promise((resolve) => setTimeout(resolve, delay));
         }
       }
     }
@@ -244,28 +259,35 @@ class ChatService {
    */
   generateMockResponse(conversation) {
     // Get the last user message
-    const lastUserMessage = conversation.filter(msg => msg.role === 'user').pop();
+    const lastUserMessage = conversation.filter((msg) => msg.role === 'user').pop();
     const userMessage = lastUserMessage ? lastUserMessage.content : 'Hello';
 
     // Simulate processing delay if configured
     if (aiConfig.mock.delay > 0) {
       // This is just for simulation - in a real implementation, we wouldn't actually wait
-      console.log(`Simulating ${aiConfig.mock.delay}ms delay for mock response`);
+      logger.debug('Simulating delay for mock response', { delay: aiConfig.mock.delay });
     }
 
     // Generate response based on user message
     const lowerMessage = userMessage.toLowerCase();
 
-    if (lowerMessage.includes('hello') || lowerMessage.includes('hi') || lowerMessage.includes('hey')) {
+    if (
+      lowerMessage.includes('hello') ||
+      lowerMessage.includes('hi') ||
+      lowerMessage.includes('hey')
+    ) {
       return "Hello there! I'm your AI Career Coach. How can I assist you with your job search today?";
     }
 
-    if (lowerMessage.includes('job') && (lowerMessage.includes('search') || lowerMessage.includes('find'))) {
+    if (
+      lowerMessage.includes('job') &&
+      (lowerMessage.includes('search') || lowerMessage.includes('find'))
+    ) {
       return "I'd be happy to help with your job search! Could you tell me more about what type of position you're looking for, your experience level, and preferred location?";
     }
 
     if (lowerMessage.includes('resume') || lowerMessage.includes('cv')) {
-      return "A strong resume is key to landing interviews! Make sure yours highlights your achievements with specific metrics, uses action verbs, and is tailored to each job you apply for. Would you like me to review a specific section of your resume?";
+      return 'A strong resume is key to landing interviews! Make sure yours highlights your achievements with specific metrics, uses action verbs, and is tailored to each job you apply for. Would you like me to review a specific section of your resume?';
     }
 
     if (lowerMessage.includes('interview')) {
@@ -277,7 +299,7 @@ class ChatService {
     }
 
     if (lowerMessage.includes('network') || lowerMessage.includes('connect')) {
-      return "Networking is one of the most effective ways to find opportunities! Try reaching out to people in your target companies on LinkedIn, attending industry events, and joining relevant professional groups. Would you like tips on how to start networking conversations?";
+      return 'Networking is one of the most effective ways to find opportunities! Try reaching out to people in your target companies on LinkedIn, attending industry events, and joining relevant professional groups. Would you like tips on how to start networking conversations?';
     }
 
     if (lowerMessage.includes('thank')) {
@@ -288,9 +310,9 @@ class ChatService {
     const responses = [
       "That's an interesting point! As your AI Career Coach, I'm here to help you navigate your job search. Could you tell me more about your specific situation?",
       "I understand. Career development is a journey, and I'm here to support you along the way. What are your main goals right now?",
-      "Great question! Career advancement often requires a combination of skills development, networking, and strategic planning. What area would you like to focus on first?",
+      'Great question! Career advancement often requires a combination of skills development, networking, and strategic planning. What area would you like to focus on first?',
       "I'd be happy to help with that! Career transitions can be challenging but rewarding. What specific aspect would you like guidance on?",
-      "Thanks for sharing that with me. As your AI Career Coach, I recommend focusing on your strengths while addressing areas for improvement. What skills would you like to develop further?"
+      'Thanks for sharing that with me. As your AI Career Coach, I recommend focusing on your strengths while addressing areas for improvement. What skills would you like to develop further?',
     ];
 
     return responses[Math.floor(Math.random() * responses.length)];

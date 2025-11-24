@@ -4,9 +4,7 @@ const app = require('../index');
 
 describe('Authentication Security Tests', () => {
   test('should reject requests without authorization header', async () => {
-    const response = await request(app)
-      .get('/api/v1/user/profile')
-      .expect(401);
+    const response = await request(app).get('/api/v1/user/profile').expect(401);
 
     expect(response.body.error).toBe('Unauthorized: No valid token provided');
   });

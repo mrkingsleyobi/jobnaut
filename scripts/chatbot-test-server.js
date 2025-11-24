@@ -32,7 +32,7 @@ app.get('/api/v1/chat/history/:userId', (req, res) => {
 
   res.json({
     success: true,
-    data: history
+    data: history,
   });
 });
 
@@ -43,7 +43,7 @@ app.post('/api/v1/chat/message', (req, res) => {
   if (!userId || !message) {
     return res.status(400).json({
       success: false,
-      error: 'userId and message are required'
+      error: 'userId and message are required',
     });
   }
 
@@ -53,9 +53,9 @@ app.post('/api/v1/chat/message', (req, res) => {
       {
         id: 1,
         role: 'assistant',
-        content: 'Hello! I\'m your AI Career Coach. How can I help you with your job search today?',
-        createdAt: new Date(Date.now() - 3600000) // 1 hour ago
-      }
+        content: "Hello! I'm your AI Career Coach. How can I help you with your job search today?",
+        createdAt: new Date(Date.now() - 3600000), // 1 hour ago
+      },
     ];
   }
 
@@ -64,7 +64,7 @@ app.post('/api/v1/chat/message', (req, res) => {
     id: Date.now(),
     role: 'user',
     content: message,
-    createdAt: new Date()
+    createdAt: new Date(),
   };
 
   conversationHistory[userId].push(userMessage);
@@ -76,7 +76,7 @@ app.post('/api/v1/chat/message', (req, res) => {
     id: Date.now() + 1,
     role: 'assistant',
     content: aiResponse,
-    createdAt: new Date()
+    createdAt: new Date(),
   };
 
   // Add AI message to history
@@ -85,8 +85,8 @@ app.post('/api/v1/chat/message', (req, res) => {
   res.json({
     success: true,
     data: {
-      aiMessage
-    }
+      aiMessage,
+    },
   });
 });
 
@@ -100,7 +100,7 @@ app.delete('/api/v1/chat/history/:userId', (req, res) => {
 
   res.json({
     success: true,
-    message: 'Conversation history cleared'
+    message: 'Conversation history cleared',
   });
 });
 
@@ -108,12 +108,19 @@ app.delete('/api/v1/chat/history/:userId', (req, res) => {
 function generateMockResponse(userMessage) {
   const lowerMessage = userMessage.toLowerCase();
 
-  if (lowerMessage.includes('hello') || lowerMessage.includes('hi') || lowerMessage.includes('hey')) {
-    return 'Hello there! I\'m your AI Career Coach. How can I assist you with your job search today?';
+  if (
+    lowerMessage.includes('hello') ||
+    lowerMessage.includes('hi') ||
+    lowerMessage.includes('hey')
+  ) {
+    return "Hello there! I'm your AI Career Coach. How can I assist you with your job search today?";
   }
 
-  if (lowerMessage.includes('job') && (lowerMessage.includes('search') || lowerMessage.includes('find'))) {
-    return 'I\'d be happy to help with your job search! Could you tell me more about what type of position you\'re looking for, your experience level, and preferred location?';
+  if (
+    lowerMessage.includes('job') &&
+    (lowerMessage.includes('search') || lowerMessage.includes('find'))
+  ) {
+    return "I'd be happy to help with your job search! Could you tell me more about what type of position you're looking for, your experience level, and preferred location?";
   }
 
   if (lowerMessage.includes('resume') || lowerMessage.includes('cv')) {
@@ -125,7 +132,7 @@ function generateMockResponse(userMessage) {
   }
 
   if (lowerMessage.includes('salary') || lowerMessage.includes('negotiat')) {
-    return 'Salary negotiation can be challenging but important! Research industry standards for your role using sites like Glassdoor and PayScale. Consider the full compensation package, not just base salary. Remember, it\'s okay to ask for what you\'re worth!';
+    return "Salary negotiation can be challenging but important! Research industry standards for your role using sites like Glassdoor and PayScale. Consider the full compensation package, not just base salary. Remember, it's okay to ask for what you're worth!";
   }
 
   if (lowerMessage.includes('network') || lowerMessage.includes('connect')) {
@@ -133,16 +140,16 @@ function generateMockResponse(userMessage) {
   }
 
   if (lowerMessage.includes('thank')) {
-    return 'You\'re welcome! I\'m here to help with your career journey. Is there anything else I can assist you with today?';
+    return "You're welcome! I'm here to help with your career journey. Is there anything else I can assist you with today?";
   }
 
   // Default response
   const responses = [
-    'That\'s an interesting point! As your AI Career Coach, I\'m here to help you navigate your job search. Could you tell me more about your specific situation?',
-    'I understand. Career development is a journey, and I\'m here to support you along the way. What are your main goals right now?',
+    "That's an interesting point! As your AI Career Coach, I'm here to help you navigate your job search. Could you tell me more about your specific situation?",
+    "I understand. Career development is a journey, and I'm here to support you along the way. What are your main goals right now?",
     'Great question! Career advancement often requires a combination of skills development, networking, and strategic planning. What area would you like to focus on first?',
-    'I\'d be happy to help with that! Career transitions can be challenging but rewarding. What specific aspect would you like guidance on?',
-    'Thanks for sharing that with me. As your AI Career Coach, I recommend focusing on your strengths while addressing areas for improvement. What skills would you like to develop further?'
+    "I'd be happy to help with that! Career transitions can be challenging but rewarding. What specific aspect would you like guidance on?",
+    'Thanks for sharing that with me. As your AI Career Coach, I recommend focusing on your strengths while addressing areas for improvement. What skills would you like to develop further?',
   ];
 
   return responses[Math.floor(Math.random() * responses.length)];
@@ -162,8 +169,8 @@ app.get('*', (req, res) => {
           'GET /api/health': 'Health check',
           'GET /api/v1/chat/history/:userId': 'Get conversation history',
           'POST /api/v1/chat/message': 'Send message to chatbot',
-          'DELETE /api/v1/chat/history/:userId': 'Clear conversation history'
-        }
+          'DELETE /api/v1/chat/history/:userId': 'Clear conversation history',
+        },
       });
     }
   });

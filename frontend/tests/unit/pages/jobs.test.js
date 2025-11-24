@@ -1,8 +1,8 @@
 // Test for jobs page component
-import { mount } from '@vue/test-utils'
-import { describe, it, expect, vi } from 'vitest'
-import { createTestingPinia } from '@pinia/testing'
-import JobsPage from '../../../pages/jobs/index.vue'
+import { mount } from '@vue/test-utils';
+import { describe, it, expect, vi } from 'vitest';
+import { createTestingPinia } from '@pinia/testing';
+import JobsPage from '../../../pages/jobs/index.vue';
 
 // Mock the trpc client
 vi.mock('../../src/api/trpcClient', () => ({
@@ -18,15 +18,15 @@ vi.mock('../../src/api/trpcClient', () => ({
               location: 'San Francisco, CA',
               description: 'Exciting opportunity for a software engineer',
               skills: ['JavaScript', 'React'],
-              postedDate: new Date().toISOString()
-            }
+              postedDate: new Date().toISOString(),
+            },
           ],
-          totalCount: 1
-        })
-      }
-    }
-  }
-}))
+          totalCount: 1,
+        }),
+      },
+    },
+  },
+}));
 
 describe('JobsPage', () => {
   it('renders correctly', async () => {
@@ -34,34 +34,34 @@ describe('JobsPage', () => {
       global: {
         plugins: [
           createTestingPinia({
-            createSpy: vi.fn
-          })
-        ]
-      }
-    })
+            createSpy: vi.fn,
+          }),
+        ],
+      },
+    });
 
     // Wait for the component to load
-    await wrapper.vm.$nextTick()
+    await wrapper.vm.$nextTick();
 
-    expect(wrapper.exists()).toBe(true)
-  })
+    expect(wrapper.exists()).toBe(true);
+  });
 
   it('displays job listings', async () => {
     const wrapper = mount(JobsPage, {
       global: {
         plugins: [
           createTestingPinia({
-            createSpy: vi.fn
-          })
-        ]
-      }
-    })
+            createSpy: vi.fn,
+          }),
+        ],
+      },
+    });
 
     // Wait for async operations
-    await wrapper.vm.$nextTick()
-    await new Promise(resolve => setTimeout(resolve, 100))
+    await wrapper.vm.$nextTick();
+    await new Promise((resolve) => setTimeout(resolve, 100));
 
     // Check if jobs are displayed
-    expect(wrapper.text()).toContain('Job Listings')
-  })
-})
+    expect(wrapper.text()).toContain('Job Listings');
+  });
+});

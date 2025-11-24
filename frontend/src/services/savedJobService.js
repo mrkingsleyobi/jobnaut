@@ -29,7 +29,7 @@ class SavedJobService {
         notes: '',
         status: 'saved',
         savedAt: new Date().toISOString(),
-      }
+      },
     ];
   }
 
@@ -41,7 +41,7 @@ class SavedJobService {
   async getSavedJobs(userId) {
     try {
       // Filter saved jobs by user ID
-      const userSavedJobs = this.savedJobs.filter(job => job.userId === userId);
+      const userSavedJobs = this.savedJobs.filter((job) => job.userId === userId);
       return userSavedJobs;
     } catch (error) {
       console.error('Error getting saved jobs:', error);
@@ -62,7 +62,7 @@ class SavedJobService {
     try {
       // Check if job is already saved
       const existingSavedJob = this.savedJobs.find(
-        job => job.userId === userId && job.jobId === jobId
+        (job) => job.userId === userId && job.jobId === jobId
       );
 
       if (existingSavedJob) {
@@ -98,9 +98,7 @@ class SavedJobService {
   async removeSavedJob(userId, jobId) {
     try {
       // Find index of saved job
-      const index = this.savedJobs.findIndex(
-        job => job.userId === userId && job.jobId === jobId
-      );
+      const index = this.savedJobs.findIndex((job) => job.userId === userId && job.jobId === jobId);
 
       if (index === -1) {
         throw new Error('Saved job not found');
@@ -128,9 +126,7 @@ class SavedJobService {
   async updateSavedJob({ userId, jobId, notes, status }) {
     try {
       // Find the saved job
-      const savedJob = this.savedJobs.find(
-        job => job.userId === userId && job.jobId === jobId
-      );
+      const savedJob = this.savedJobs.find((job) => job.userId === userId && job.jobId === jobId);
 
       if (!savedJob) {
         throw new Error('Saved job not found');

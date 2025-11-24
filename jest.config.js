@@ -123,4 +123,43 @@ module.exports = {
 
   // Whether to use watchman for file crawling
   watchman: true,
+
+  // Collect coverage information
+  collectCoverage: false,
+
+  // An array of glob patterns indicating a set of files for which coverage information should be collected
+  collectCoverageFrom: [
+    'src/**/*.js',
+    '!src/**/*.test.js',
+    '!src/**/*.spec.js',
+    '!src/python/**',
+    '!src/index.js',
+    '!**/node_modules/**',
+    '!**/dist/**',
+  ],
+
+  // The directory where Jest should output its coverage files
+  coverageDirectory: 'coverage',
+
+  // An array of regexp pattern strings used to skip coverage collection
+  coveragePathIgnorePatterns: [
+    '/node_modules/',
+    '/dist/',
+    '/frontend/',
+    '/tests/',
+    '/python/',
+  ],
+
+  // A list of reporter names that Jest uses when writing coverage reports
+  coverageReporters: ['text', 'text-summary', 'html', 'lcov', 'json'],
+
+  // An object that configures minimum threshold enforcement for coverage results
+  coverageThreshold: {
+    global: {
+      branches: 85,
+      functions: 85,
+      lines: 85,
+      statements: 85,
+    },
+  },
 };

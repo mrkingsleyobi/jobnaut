@@ -7,7 +7,7 @@ describe('Skill Gap Analysis Router', () => {
     it('should validate getAnalysisForJob input', async () => {
       const input = {
         userId: 'user123',
-        jobId: 1
+        jobId: 1,
       };
 
       expect(() => {
@@ -20,10 +20,10 @@ describe('Skill Gap Analysis Router', () => {
         { userId: '', jobId: 1 }, // Empty user ID
         { userId: 'user123', jobId: 0 }, // Invalid job ID
         { userId: 'user123' }, // Missing job ID
-        { jobId: 1 } // Missing user ID
+        { jobId: 1 }, // Missing user ID
       ];
 
-      invalidInputs.forEach(input => {
+      invalidInputs.forEach((input) => {
         expect(() => {
           skillGapRouter.getAnalysisForJob._def.inputs[0].parse(input);
         }).toThrow();
@@ -33,7 +33,7 @@ describe('Skill Gap Analysis Router', () => {
     it('should validate getAnalysisForJobs input', async () => {
       const input = {
         userId: 'user123',
-        jobIds: [1, 2, 3]
+        jobIds: [1, 2, 3],
       };
 
       expect(() => {
@@ -46,10 +46,10 @@ describe('Skill Gap Analysis Router', () => {
         { userId: '', jobIds: [1, 2, 3] }, // Empty user ID
         { userId: 'user123', jobIds: [] }, // Empty job IDs array
         { userId: 'user123', jobIds: [0] }, // Invalid job ID
-        { jobIds: [1, 2, 3] } // Missing user ID
+        { jobIds: [1, 2, 3] }, // Missing user ID
       ];
 
-      invalidInputs.forEach(input => {
+      invalidInputs.forEach((input) => {
         expect(() => {
           skillGapRouter.getAnalysisForJobs._def.inputs[0].parse(input);
         }).toThrow();
@@ -58,7 +58,7 @@ describe('Skill Gap Analysis Router', () => {
 
     it('should validate getOverallAnalysis input', async () => {
       const input = {
-        userId: 'user123'
+        userId: 'user123',
       };
 
       expect(() => {
@@ -69,10 +69,10 @@ describe('Skill Gap Analysis Router', () => {
     it('should reject invalid getOverallAnalysis input', async () => {
       const invalidInputs = [
         { userId: '' }, // Empty user ID
-        {} // Missing user ID
+        {}, // Missing user ID
       ];
 
-      invalidInputs.forEach(input => {
+      invalidInputs.forEach((input) => {
         expect(() => {
           skillGapRouter.getOverallAnalysis._def.inputs[0].parse(input);
         }).toThrow();

@@ -6,6 +6,7 @@ const userRouter = require('./routers/user');
 const jobsRouter = require('./routers/jobs');
 const chatRouter = require('./routers/chat');
 const skillGapRouter = require('./routers/skillGap');
+const savedJobsRouter = require('./routers/savedJobs');
 
 /**
  * Main app router
@@ -15,6 +16,7 @@ const appRouter = router({
   jobs: jobsRouter,
   chat: chatRouter,
   skillGap: skillGapRouter,
+  savedJobs: savedJobsRouter,
 });
 
 // Export type router type signature

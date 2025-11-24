@@ -17,9 +17,7 @@
           >
             {{ isSaved ? 'Saved' : 'Save Job' }}
           </button>
-          <button @click="applyToJob" class="action-button apply-button">
-            Apply Now
-          </button>
+          <button @click="applyToJob" class="action-button apply-button">Apply Now</button>
         </div>
       </div>
 
@@ -84,96 +82,96 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import JobCard from '../../components/JobCard.vue'
-import trpc from '../../src/api/trpcClient'
+import { ref, onMounted } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
+import JobCard from '../../components/JobCard.vue';
+import trpc from '../../src/api/trpcClient';
 
 // Route and router
-const route = useRoute()
-const router = useRouter()
+const route = useRoute();
+const router = useRouter();
 
 // Reactive state
-const job = ref(null)
-const loading = ref(true)
-const isSaved = ref(false)
-const savedJobs = ref(new Set())
-const similarJobs = ref([])
+const job = ref(null);
+const loading = ref(true);
+const isSaved = ref(false);
+const savedJobs = ref(new Set());
+const similarJobs = ref([]);
 
 // Methods
 const loadJobDetails = async () => {
-  const jobId = route.params.id
-  loading.value = true
+  const jobId = route.params.id;
+  loading.value = true;
 
   try {
     // Fetch job details from backend using tRPC
-    const jobData = await trpc.jobs.getById.query({ id: parseInt(jobId) })
-    job.value = jobData
+    const jobData = await trpc.jobs.getById.query({ id: parseInt(jobId) });
+    job.value = jobData;
 
     // Check if job is saved
-    isSaved.value = savedJobs.value.has(parseInt(jobId))
+    isSaved.value = savedJobs.value.has(parseInt(jobId));
 
     // Fetch similar jobs (using search with job title as query)
     if (jobData.title) {
       const searchResult = await trpc.jobs.search.query({
         query: jobData.title,
         limit: 4,
-        offset: 0
-      })
+        offset: 0,
+      });
 
       // Filter out the current job and take first 2
       similarJobs.value = searchResult.jobs
-        .filter(j => j.id !== jobData.id)
+        .filter((j) => j.id !== jobData.id)
         .slice(0, 2)
-        .map(j => ({
+        .map((j) => ({
           ...j,
-          postedDate: j.postedDate || new Date().toISOString()
-        }))
+          postedDate: j.postedDate || new Date().toISOString(),
+        }));
     }
   } catch (error) {
-    console.error('Error loading job details:', error)
+    console.error('Error loading job details:', error);
   } finally {
-    loading.value = false
+    loading.value = false;
   }
-}
+};
 
 const toggleSaveJob = () => {
-  const jobId = job.value.id
+  const jobId = job.value.id;
   if (savedJobs.value.has(jobId)) {
-    savedJobs.value.delete(jobId)
-    isSaved.value = false
+    savedJobs.value.delete(jobId);
+    isSaved.value = false;
   } else {
-    savedJobs.value.add(jobId)
-    isSaved.value = true
+    savedJobs.value.add(jobId);
+    isSaved.value = true;
   }
-  console.log('Job saved status:', isSaved.value)
-}
+  console.log('Job saved status:', isSaved.value);
+};
 
 const applyToJob = () => {
   // Apply to job
   if (job.value && job.value.applicationLink) {
-    window.open(job.value.applicationLink, '_blank')
+    window.open(job.value.applicationLink, '_blank');
   } else {
-    alert('Application link not available')
+    alert('Application link not available');
   }
-}
+};
 
 const formatDate = (dateString) => {
-  return new Date(dateString).toLocaleDateString()
-}
+  return new Date(dateString).toLocaleDateString();
+};
 
 const isJobSaved = (jobId) => {
-  return savedJobs.value.has(jobId)
-}
+  return savedJobs.value.has(jobId);
+};
 
 const viewJobDetails = (jobId) => {
-  router.push(`/jobs/${jobId}`)
-}
+  router.push(`/jobs/${jobId}`);
+};
 
 // Load job details on component mount
 onMounted(() => {
-  loadJobDetails()
-})
+  loadJobDetails();
+});
 </script>
 
 <style scoped>
@@ -333,7 +331,7 @@ onMounted(() => {
 }
 
 .requirement-item::before {
-  content: "•";
+  content: '•';
   color: #3b82f6;
   font-weight: bold;
   display: inline-block;

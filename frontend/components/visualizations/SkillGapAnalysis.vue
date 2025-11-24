@@ -3,7 +3,9 @@
     <!-- Header -->
     <div class="analysis-header">
       <h2 class="analysis-title">Skill Gap Analysis</h2>
-      <p class="analysis-subtitle">Identify and bridge the gap between your current skills and job requirements</p>
+      <p class="analysis-subtitle">
+        Identify and bridge the gap between your current skills and job requirements
+      </p>
     </div>
 
     <!-- Overall Match Score - Radial Progress Chart -->
@@ -25,7 +27,9 @@
           </svg>
         </div>
         <div class="score-details">
-          <p class="score-description">Your profile matches {{ matchScore }}% of the required skills for this position.</p>
+          <p class="score-description">
+            Your profile matches {{ matchScore }}% of the required skills for this position.
+          </p>
           <p class="score-recommendation" :class="recommendationClass">
             {{ recommendationText }}
           </p>
@@ -37,11 +41,7 @@
     <div class="proficiency-section">
       <h3 class="section-title">Skill Proficiency Comparison</h3>
       <div class="bar-chart-container">
-        <div
-          v-for="skill in skillsData"
-          :key="skill.name"
-          class="skill-bar"
-        >
+        <div v-for="skill in skillsData" :key="skill.name" class="skill-bar">
           <div class="skill-info">
             <span class="skill-name">{{ skill.name }}</span>
             <div class="proficiency-labels">
@@ -51,14 +51,8 @@
           </div>
           <div class="bar-container">
             <div class="bar-bg"></div>
-            <div
-              class="bar-current"
-              :style="{ width: skill.current + '%' }"
-            ></div>
-            <div
-              class="bar-required"
-              :style="{ width: skill.required + '%' }"
-            ></div>
+            <div class="bar-current" :style="{ width: skill.current + '%' }"></div>
+            <div class="bar-required" :style="{ width: skill.required + '%' }"></div>
           </div>
         </div>
       </div>
@@ -68,11 +62,7 @@
     <div class="missing-skills-section">
       <h3 class="section-title">Missing Skills & Recommendations</h3>
       <div class="missing-skills-grid">
-        <div
-          v-for="skill in missingSkills"
-          :key="skill.name"
-          class="skill-card"
-        >
+        <div v-for="skill in missingSkills" :key="skill.name" class="skill-card">
           <div class="skill-card-header">
             <h4 class="skill-card-title">{{ skill.name }}</h4>
             <span class="priority-badge" :class="`priority-${skill.priority}`">
@@ -104,11 +94,7 @@
             </tr>
           </thead>
           <tbody>
-            <tr
-              v-for="skill in skillsData"
-              :key="skill.name"
-              :class="getRowClass(skill)"
-            >
+            <tr v-for="skill in skillsData" :key="skill.name" :class="getRowClass(skill)">
               <td>{{ skill.name }}</td>
               <td>
                 <div class="level-display">
@@ -139,24 +125,48 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed } from 'vue';
 
 // Props
 const props = defineProps({
   matchScore: {
     type: Number,
-    default: 75
+    default: 75,
   },
   skillsData: {
     type: Array,
     default: () => [
-      { name: 'JavaScript', current: 80, required: 90, gap: 10, recommendation: 'Advanced JS concepts' },
+      {
+        name: 'JavaScript',
+        current: 80,
+        required: 90,
+        gap: 10,
+        recommendation: 'Advanced JS concepts',
+      },
       { name: 'Vue.js', current: 70, required: 85, gap: 15, recommendation: 'Composition API' },
       { name: 'Node.js', current: 60, required: 75, gap: 15, recommendation: 'Express framework' },
-      { name: 'CSS/Tailwind', current: 85, required: 80, gap: -5, recommendation: 'Advanced styling' },
-      { name: 'Database Design', current: 50, required: 70, gap: 20, recommendation: 'SQL optimization' },
-      { name: 'API Development', current: 75, required: 80, gap: 5, recommendation: 'RESTful principles' }
-    ]
+      {
+        name: 'CSS/Tailwind',
+        current: 85,
+        required: 80,
+        gap: -5,
+        recommendation: 'Advanced styling',
+      },
+      {
+        name: 'Database Design',
+        current: 50,
+        required: 70,
+        gap: 20,
+        recommendation: 'SQL optimization',
+      },
+      {
+        name: 'API Development',
+        current: 75,
+        required: 80,
+        gap: 5,
+        recommendation: 'RESTful principles',
+      },
+    ],
   },
   missingSkills: {
     type: Array,
@@ -164,61 +174,61 @@ const props = defineProps({
       {
         name: 'TypeScript',
         priority: 'high',
-        description: 'Strongly typed programming language that builds on JavaScript.'
+        description: 'Strongly typed programming language that builds on JavaScript.',
       },
       {
         name: 'Docker',
         priority: 'medium',
-        description: 'Containerization platform for consistent application deployment.'
+        description: 'Containerization platform for consistent application deployment.',
       },
       {
         name: 'AWS Cloud',
         priority: 'high',
-        description: 'Amazon Web Services cloud computing platform.'
+        description: 'Amazon Web Services cloud computing platform.',
       },
       {
         name: 'CI/CD Pipelines',
         priority: 'medium',
-        description: 'Automated deployment and integration processes.'
-      }
-    ]
-  }
-})
+        description: 'Automated deployment and integration processes.',
+      },
+    ],
+  },
+});
 
 // Computed properties for radial chart
-const progressCircumference = computed(() => 2 * Math.PI * 54)
+const progressCircumference = computed(() => 2 * Math.PI * 54);
 const progressOffset = computed(() => {
-  const progress = props.matchScore / 100
-  return progressCircumference.value * (1 - progress)
-})
+  const progress = props.matchScore / 100;
+  return progressCircumference.value * (1 - progress);
+});
 
 // Recommendation text based on match score
 const recommendationText = computed(() => {
-  if (props.matchScore >= 80) return 'Excellent match! You\'re well-prepared for this role.'
-  if (props.matchScore >= 60) return 'Good match with some areas to improve.'
-  if (props.matchScore >= 40) return 'Moderate match. Focus on key skill gaps.'
-  return 'Significant gaps identified. Consider targeted learning.'
-})
+  if (props.matchScore >= 80) return "Excellent match! You're well-prepared for this role.";
+  if (props.matchScore >= 60) return 'Good match with some areas to improve.';
+  if (props.matchScore >= 40) return 'Moderate match. Focus on key skill gaps.';
+  return 'Significant gaps identified. Consider targeted learning.';
+});
 
 const recommendationClass = computed(() => {
-  if (props.matchScore >= 80) return 'recommendation-excellent'
-  if (props.matchScore >= 60) return 'recommendation-good'
-  if (props.matchScore >= 40) return 'recommendation-moderate'
-  return 'recommendation-low'
-})
+  if (props.matchScore >= 80) return 'recommendation-excellent';
+  if (props.matchScore >= 60) return 'recommendation-good';
+  if (props.matchScore >= 40) return 'recommendation-moderate';
+  return 'recommendation-low';
+});
 
 // Methods for table styling
 const getRowClass = (skill) => {
-  if (skill.gap === 0) return 'row-match'
-  if (skill.gap > 0) return 'row-gap'
-  return 'row-excess'
-}
+  if (skill.gap === 0) return 'row-match';
+  if (skill.gap > 0) return 'row-gap';
+  return 'row-excess';
+};
 
 const getGapClass = (gap) => {
-  if (gap === 0) return 'gap-none'
-  if (gap > 0) return 'gap-positive'
-  return 'gap-negative'
-}
+  if (gap === 0) return 'gap-none';
+  if (gap > 0) return 'gap-positive';
+  return 'gap-negative';
+};
 </script>
 
 <style scoped>
@@ -380,7 +390,8 @@ const getGapClass = (gap) => {
   gap: 1rem;
 }
 
-.current-label, .required-label {
+.current-label,
+.required-label {
   font-size: 0.875rem;
   color: #6b7280;
 }

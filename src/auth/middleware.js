@@ -17,7 +17,7 @@ const authMiddleware = async (req, res, next) => {
         ip: req.ip,
         userAgent: req.get('User-Agent'),
         reason: 'No valid token provided',
-        url: req.originalUrl
+        url: req.originalUrl,
       });
       return res.status(401).json({ error: 'Unauthorized: No valid token provided' });
     }
@@ -37,7 +37,7 @@ const authMiddleware = async (req, res, next) => {
         securityLogger.logSecurityIncident('auth_system_error', {
           ip: req.ip,
           userAgent: req.get('User-Agent'),
-          error: 'Clerk client does not have verifyToken method'
+          error: 'Clerk client does not have verifyToken method',
         });
         return res.status(500).json({ error: 'Internal server error during authentication' });
       }
@@ -47,7 +47,7 @@ const authMiddleware = async (req, res, next) => {
         userAgent: req.get('User-Agent'),
         reason: 'Invalid session',
         url: req.originalUrl,
-        error: error.message
+        error: error.message,
       });
       return res.status(401).json({ error: 'Unauthorized: Invalid session' });
     }
@@ -57,7 +57,7 @@ const authMiddleware = async (req, res, next) => {
         ip: req.ip,
         userAgent: req.get('User-Agent'),
         reason: 'Invalid session',
-        url: req.originalUrl
+        url: req.originalUrl,
       });
       return res.status(401).json({ error: 'Unauthorized: Invalid session' });
     }
@@ -69,7 +69,7 @@ const authMiddleware = async (req, res, next) => {
         userAgent: req.get('User-Agent'),
         reason: 'Session not active',
         url: req.originalUrl,
-        sessionStatus: session.status
+        sessionStatus: session.status,
       });
       return res.status(401).json({ error: 'Unauthorized: Session not active' });
     }
@@ -81,7 +81,7 @@ const authMiddleware = async (req, res, next) => {
         ip: req.ip,
         userAgent: req.get('User-Agent'),
         userId: session.userId,
-        sessionId: session.id
+        sessionId: session.id,
       });
       return res.status(401).json({ error: 'Unauthorized: Session expired' });
     }
@@ -94,13 +94,16 @@ const authMiddleware = async (req, res, next) => {
         userAgent: req.get('User-Agent'),
         reason: 'User not found',
         url: req.originalUrl,
-        userId: session.userId
+        userId: session.userId,
       });
       return res.status(401).json({ error: 'Unauthorized: User not found' });
     }
 
     // Check if user account is active
-    if (clerkUser.banned || !clerkUser.emailAddresses.some(email => email.verification.status === 'verified')) {
+    if (
+      clerkUser.banned ||
+      !clerkUser.emailAddresses.some((email) => email.verification.status === 'verified')
+    ) {
       securityLogger.logAuthEvent('login_failure', {
         ip: req.ip,
         userAgent: req.get('User-Agent'),
@@ -108,7 +111,9 @@ const authMiddleware = async (req, res, next) => {
         url: req.originalUrl,
         userId: session.userId,
         banned: clerkUser.banned,
-        emailVerified: clerkUser.emailAddresses.some(email => email.verification.status === 'verified')
+        emailVerified: clerkUser.emailAddresses.some(
+          (email) => email.verification.status === 'verified'
+        ),
       });
       return res.status(401).json({ error: 'Unauthorized: User account not active' });
     }
@@ -120,7 +125,7 @@ const authMiddleware = async (req, res, next) => {
     req.user = {
       ...localUser,
       clerkUser,
-      sessionId: session.id
+      sessionId: session.id,
     };
 
     // Log successful authentication
@@ -129,7 +134,7 @@ const authMiddleware = async (req, res, next) => {
       userAgent: req.get('User-Agent'),
       userId: localUser.id,
       clerkId: clerkUser.id,
-      email: clerkUser.emailAddresses[0]?.emailAddress
+      email: clerkUser.emailAddresses[0]?.emailAddress,
     });
 
     next();
@@ -140,7 +145,7 @@ const authMiddleware = async (req, res, next) => {
       userAgent: req.get('User-Agent'),
       url: req.originalUrl,
       error: error.message,
-      stack: error.stack
+      stack: error.stack,
     });
     res.status(500).json({ error: 'Internal server error during authentication' });
   }
@@ -169,7 +174,7 @@ const optionalAuthMiddleware = async (req, res, next) => {
           userAgent: req.get('User-Agent'),
           userId: user.id,
           email: user.email,
-          optional: true
+          optional: true,
         });
       } else {
         // Log failed optional authentication
@@ -178,7 +183,7 @@ const optionalAuthMiddleware = async (req, res, next) => {
           userAgent: req.get('User-Agent'),
           reason: 'Invalid session in optional auth',
           url: req.originalUrl,
-          optional: true
+          optional: true,
         });
       }
     }
@@ -191,7 +196,7 @@ const optionalAuthMiddleware = async (req, res, next) => {
       url: req.originalUrl,
       error: error.message,
       stack: error.stack,
-      optional: true
+      optional: true,
     });
     next();
   }

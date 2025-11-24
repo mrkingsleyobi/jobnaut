@@ -22,6 +22,9 @@ model User {
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
   savedJobs       SavedJob[]
+  conversations   Conversation[]
+  activities      UserActivity[]
+  skillGapAnalyses SkillGapAnalysis[]
 }
 
 // Jobs table
@@ -37,6 +40,7 @@ model Job {
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
   savedBy         SavedJob[]
+  skillGapAnalyses SkillGapAnalysis[]
 
   // Add indexes for frequently queried fields
   @@index([title])
@@ -64,4 +68,62 @@ model SavedJob {
   @@index([userId])
   @@index([jobId])
   @@index([savedAt])
+}
+
+// Conversation table - Chat history persistence
+model Conversation {
+  id        Int       @id @default(autoincrement())
+  userId    Int
+  title     String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  user      User      @relation(fields: [userId], references: [id])
+  messages  Message[]
+
+  @@index([userId])
+  @@index([createdAt])
+}
+
+// Message table - Individual chat messages
+model Message {
+  id             Int          @id @default(autoincrement())
+  conversationId Int
+  role           String       // 'user' or 'assistant'
+  content        String       @db.Text
+  createdAt      DateTime     @default(now())
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId])
+  @@index([createdAt])
+}
+
+// UserActivity table - Analytics and tracking
+model UserActivity {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  action    String   // 'job_search', 'job_view', 'job_save', etc.
+  metadata  Json?
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@index([userId, createdAt])
+  @@index([action])
+}
+
+// SkillGapAnalysis table - Store analysis results
+model SkillGapAnalysis {
+  id               Int      @id @default(autoincrement())
+  userId           Int
+  jobId            Int
+  matchingSkills   Json
+  missingSkills    Json
+  matchPercentage  Float
+  recommendations  Json
+  createdAt        DateTime @default(now())
+  user             User     @relation(fields: [userId], references: [id])
+  job              Job      @relation(fields: [jobId], references: [id])
+
+  @@index([userId, jobId])
+  @@index([createdAt])
+  @@index([matchPercentage])
 }

@@ -5,9 +5,7 @@ const app = require('../index');
 describe('Comprehensive Security Tests', () => {
   // Test for common security headers
   test('should include basic security headers in responses', async () => {
-    const response = await request(app)
-      .get('/health')
-      .expect(200);
+    const response = await request(app).get('/health').expect(200);
 
     // Our app should not return X-Powered-By header (removed by helmet for security)
     expect(response.headers).not.toHaveProperty('x-powered-by');
@@ -34,7 +32,7 @@ describe('Comprehensive Security Tests', () => {
 
     const responses = await Promise.all(requests);
     // All requests should succeed (no rate limiting implemented yet)
-    responses.forEach(response => {
+    responses.forEach((response) => {
       expect(response.status).toBe(200);
     });
   });
@@ -54,9 +52,7 @@ describe('Comprehensive Security Tests', () => {
 
   // Test for path traversal attempts
   test('should not be vulnerable to path traversal', async () => {
-    const response = await request(app)
-      .get('/../../../../etc/passwd')
-      .expect(404);
+    const response = await request(app).get('/../../../../etc/passwd').expect(404);
 
     // Should return 404 for non-existent routes
     expect(response.body.error).toBe('Not found');
@@ -88,9 +84,7 @@ describe('Comprehensive Security Tests', () => {
   test('should not expose stack traces in error responses', async () => {
     // This test would be more meaningful with actual error scenarios
     // For now, we're just verifying the general error structure
-    const response = await request(app)
-      .get('/non-existent-endpoint')
-      .expect(404);
+    const response = await request(app).get('/non-existent-endpoint').expect(404);
 
     expect(response.body.error).toBe('Not found');
     // Should not contain stack trace information

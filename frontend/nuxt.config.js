@@ -9,7 +9,7 @@ export default defineNuxtConfig({
     },
   },
   modules: [
-    // Add modules here
+    '@pinia/nuxt',
   ],
   runtimeConfig: {
     public: {

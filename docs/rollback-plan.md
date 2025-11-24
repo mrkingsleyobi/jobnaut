@@ -19,6 +19,7 @@ Before executing a rollback, ensure you have:
 ### 1. Application Code Issues
 
 **Symptoms:**
+
 - Application crashes or fails to start
 - Critical functionality is broken
 - Performance degradation
@@ -32,6 +33,7 @@ Before executing a rollback, ensure you have:
    - Review recent changes and deployments
 
 2. **Stop Current Deployment:**
+
    ```bash
    # For Docker deployments
    docker-compose down
@@ -41,6 +43,7 @@ Before executing a rollback, ensure you have:
    ```
 
 3. **Restore Previous Version:**
+
    ```bash
    # If using version control
    git checkout <previous_stable_commit>
@@ -50,12 +53,14 @@ Before executing a rollback, ensure you have:
    ```
 
 4. **Restore Database (if needed):**
+
    ```bash
    # Restore from backup
    pg_restore -d jobnaut_prod jobnaut_backup_<timestamp>.sql
    ```
 
 5. **Re-deploy Previous Version:**
+
    ```bash
    # For Docker deployments
    docker-compose up -d
@@ -73,6 +78,7 @@ Before executing a rollback, ensure you have:
 ### 2. Database Migration Issues
 
 **Symptoms:**
+
 - Database connection errors
 - Data integrity issues
 - Query failures
@@ -81,18 +87,21 @@ Before executing a rollback, ensure you have:
 **Rollback Procedure:**
 
 1. **Stop Application:**
+
    ```bash
    # Stop the application to prevent further database changes
    docker-compose stop backend
    ```
 
 2. **Identify Failed Migration:**
+
    ```bash
    # Check migration status
    npx prisma migrate status
    ```
 
 3. **Rollback Database Migration:**
+
    ```bash
    # Rollback the specific migration
    npx prisma migrate resolve --rolled-back "<migration_name>"
@@ -102,12 +111,14 @@ Before executing a rollback, ensure you have:
    ```
 
 4. **Restore Database from Backup:**
+
    ```bash
    # If rollback is not sufficient, restore from backup
    pg_restore -d jobnaut_prod jobnaut_backup_<timestamp>.sql
    ```
 
 5. **Re-deploy Application:**
+
    ```bash
    # Re-deploy the previous version
    docker-compose up -d
@@ -121,6 +132,7 @@ Before executing a rollback, ensure you have:
 ### 3. Configuration Issues
 
 **Symptoms:**
+
 - Authentication failures
 - Environment-specific errors
 - Integration failures
@@ -134,6 +146,7 @@ Before executing a rollback, ensure you have:
    - Test external integrations
 
 2. **Restore Previous Configuration:**
+
    ```bash
    # Restore previous environment file
    cp .env.production.backup .env.production
@@ -143,6 +156,7 @@ Before executing a rollback, ensure you have:
    ```
 
 3. **Restart Application:**
+
    ```bash
    # Restart with correct configuration
    docker-compose restart
@@ -246,11 +260,13 @@ After successful rollback:
 ## Contact Information
 
 **Primary Contacts:**
+
 - Development Team Lead: [Name, Email, Phone]
 - Operations Team: [Name, Email, Phone]
 - Security Team: [Name, Email, Phone]
 
 **Escalation Contacts:**
+
 - Technical Director: [Name, Email, Phone]
 - CTO: [Name, Email, Phone]
 

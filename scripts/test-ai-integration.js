@@ -44,7 +44,6 @@ async function testAIIntegration() {
     console.log(`History after clearing: ${clearedHistory.length} messages`);
 
     console.log('\n--- All Tests Completed Successfully ---');
-
   } catch (error) {
     console.error('Test failed:', error.message);
   }

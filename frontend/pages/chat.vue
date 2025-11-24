@@ -10,23 +10,23 @@
         <div class="sidebar-section">
           <h3>Quick Tips</h3>
           <ul class="tips-list">
-            <li> Tailor your resume for each application </li>
-            <li> Research company culture before interviews </li>
-            <li> Practice common interview questions </li>
-            <li> Network with professionals in your field </li>
-            <li> Follow up after interviews </li>
+            <li>Tailor your resume for each application</li>
+            <li>Research company culture before interviews</li>
+            <li>Practice common interview questions</li>
+            <li>Network with professionals in your field</li>
+            <li>Follow up after interviews</li>
           </ul>
         </div>
 
         <div class="sidebar-section">
           <h3>Popular Topics</h3>
           <div class="topics-grid">
-            <button class="topic-button"> Resume Writing </button>
-            <button class="topic-button"> Interview Prep </button>
-            <button class="topic-button"> Job Search </button>
-            <button class="topic-button"> Career Change </button>
-            <button class="topic-button"> Salary Negotiation </button>
-            <button class="topic-button"> Skill Development </button>
+            <button class="topic-button">Resume Writing</button>
+            <button class="topic-button">Interview Prep</button>
+            <button class="topic-button">Job Search</button>
+            <button class="topic-button">Career Change</button>
+            <button class="topic-button">Salary Negotiation</button>
+            <button class="topic-button">Skill Development</button>
           </div>
         </div>
       </div>
@@ -39,26 +39,26 @@
 </template>
 
 <script>
-import { ref, onMounted } from 'vue'
-import ChatComponent from '~/components/chatbot/ChatComponent.vue'
+import { ref, onMounted } from 'vue';
+import ChatComponent from '~/components/chatbot/ChatComponent.vue';
 
 export default {
   name: 'ChatPage',
   components: {
-    ChatComponent
+    ChatComponent,
   },
   setup() {
-    const userId = ref('user-123') // In a real app, this would come from auth
+    const userId = ref('user-123'); // In a real app, this would come from auth
 
     // In a real implementation, you would get the user ID from your auth system
     // const getUser = useUser() // If using Clerk
     // userId.value = getUser()?.id || 'anonymous'
 
     return {
-      userId
-    }
-  }
-}
+      userId,
+    };
+  },
+};
 </script>
 
 <style scoped>

@@ -33,13 +33,13 @@ describe('Job Model', () => {
         description: 'Exciting opportunity for a software engineer',
         skills: ['JavaScript', 'React'],
         postedDate: new Date(),
-        applicationLink: 'https://example.com/apply'
+        applicationLink: 'https://example.com/apply',
       };
 
       const mockCreatedJob = {
         id: 1,
         ...jobData,
-        skills: JSON.stringify(jobData.skills)
+        skills: JSON.stringify(jobData.skills),
       };
 
       prisma.job.create.mockResolvedValue(mockCreatedJob);
@@ -75,7 +75,7 @@ describe('Job Model', () => {
         description: 'Exciting opportunity',
         skills: JSON.stringify(['JavaScript', 'React']),
         postedDate: new Date(),
-        applicationLink: 'https://example.com/apply'
+        applicationLink: 'https://example.com/apply',
       };
 
       prisma.job.findUnique.mockResolvedValue(mockJob);
@@ -115,7 +115,7 @@ describe('Job Model', () => {
           description: 'Exciting opportunity',
           skills: JSON.stringify(['JavaScript', 'React']),
           postedDate: new Date(),
-          applicationLink: 'https://example.com/apply/1'
+          applicationLink: 'https://example.com/apply/1',
         },
         {
           id: 2,
@@ -125,8 +125,8 @@ describe('Job Model', () => {
           description: 'Lead product development',
           skills: JSON.stringify(['Product Management', 'Agile']),
           postedDate: new Date(),
-          applicationLink: 'https://example.com/apply/2'
-        }
+          applicationLink: 'https://example.com/apply/2',
+        },
       ];
 
       const mockTotal = 2;
@@ -169,8 +169,8 @@ describe('Job Model', () => {
           description: 'Exciting software opportunity',
           skills: JSON.stringify(['JavaScript', 'React']),
           postedDate: new Date(),
-          applicationLink: 'https://example.com/apply/1'
-        }
+          applicationLink: 'https://example.com/apply/1',
+        },
       ];
 
       const mockTotal = 1;
@@ -224,7 +224,7 @@ describe('Job Model', () => {
       const jobId = 1;
       const updateData = {
         title: 'Senior Software Engineer',
-        skills: ['JavaScript', 'React', 'Node.js']
+        skills: ['JavaScript', 'React', 'Node.js'],
       };
 
       const mockUpdatedJob = {
@@ -235,7 +235,7 @@ describe('Job Model', () => {
         description: 'Exciting opportunity',
         skills: JSON.stringify(['JavaScript', 'React', 'Node.js']),
         postedDate: new Date(),
-        applicationLink: 'https://example.com/apply'
+        applicationLink: 'https://example.com/apply',
       };
 
       prisma.job.update.mockResolvedValue(mockUpdatedJob);
@@ -248,7 +248,7 @@ describe('Job Model', () => {
         where: { id: jobId },
         data: {
           title: updateData.title,
-          skills: "[\"JavaScript\",\"React\",\"Node.js\"]",
+          skills: '["JavaScript","React","Node.js"]',
         },
       });
       expect(result).toEqual(mockUpdatedJob);
@@ -267,7 +267,7 @@ describe('Job Model', () => {
         description: 'Exciting opportunity',
         skills: JSON.stringify(['JavaScript', 'React']),
         postedDate: new Date(),
-        applicationLink: 'https://example.com/apply'
+        applicationLink: 'https://example.com/apply',
       };
 
       prisma.job.delete.mockResolvedValue(mockDeletedJob);
@@ -296,8 +296,8 @@ describe('Job Model', () => {
           description: 'Exciting opportunity',
           skills: JSON.stringify(['JavaScript', 'React', 'Node.js']),
           postedDate: new Date(),
-          applicationLink: 'https://example.com/apply/1'
-        }
+          applicationLink: 'https://example.com/apply/1',
+        },
       ];
 
       const mockTotal = 1;
